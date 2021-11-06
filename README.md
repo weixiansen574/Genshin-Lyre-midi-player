@@ -3,7 +3,7 @@
 
 ![image](https://github.com/weixiansen574/Genshin-Lyre-midi-player/blob/main/screenshot.jpg)
 
-
+现已适配简体中文、繁体中文、英语
 ## 使用方法
 选择midi文件并打开，第一次运行软件需配置坐标，可在开发者选项中打开指针位置显示坐标，填写完毕并保存。因为许多屏幕的分辨率都不相同，所以需要自己标出原神琴的按键所对应屏幕坐标以确定按键位置。填写完保存后，后面进来就无需再填写。 
 
