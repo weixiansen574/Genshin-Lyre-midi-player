@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AboutActivity">
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:gravity="center_horizontal">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="103dp"
+        android:layout_height="101dp"
+        android:layout_marginTop="40dp"
+        app:srcCompat="@drawable/logo" />
+
+    <TextView
+      android:id="@+id/textView2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/app_name"
+        android:layout_marginTop="10dp"
+      android:textSize="20dp"
+      android:textColor="@color/colorBlack"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+      android:layout_marginTop="5dp"
+      android:text="@string/app_version"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/developer"
+        android:textColor="@color/colorBlack"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:textColor="@color/colorBlack"
+        android:text="E-mall：1695339869@qq.com"/>
+    <TextView
+        android:id="@+id/github"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:textColor="@color/colorBlack"
+        android:text="github"/>
+    <TextView
+        android:id="@+id/bilibili"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:textColor="@color/colorBlack"
+        android:text="bilibili"/>
+    <TextView
+        android:id="@+id/youtube"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:textColor="@color/colorBlack"
+        android:text="YouTube"/>
+
+  </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

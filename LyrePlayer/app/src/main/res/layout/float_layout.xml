@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal">
+    <androidx.cardview.widget.CardView
+        android:id="@+id/player_card"
+        android:layout_width="500px"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="2.5px"
+        android:layout_marginVertical="12.5px"
+        app:cardCornerRadius="5px"
+        app:cardElevation="2.5px">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="92.5px"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="437.5px"
+                android:layout_height="match_parent"
+                android:textColor="@color/colorBlack"
+                android:id="@+id/midi_name"/>
+            <Button
+                android:id="@+id/close"
+                android:layout_width="match_parent"
+                android:layout_height="62.5px"
+                android:background="@color/colorRed"
+                android:text="×"
+                android:textSize="50px"/>
+        </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/current_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5px"
+                    android:text="00:00"/>
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="300px"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5px"/>
+                <TextView
+                    android:id="@+id/total_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5px"
+                    android:text="00:00"
+                    android:gravity="right"/>
+
+            </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/float_start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▶"/>
+            <Button
+                android:id="@+id/float_stop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="■"/>
+        </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>

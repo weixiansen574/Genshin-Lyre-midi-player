@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Genshin Lyre midi player</string>
+    <string name="app_version">3.0.0</string>
+    <string name="developer">developer：weixiansen574</string>
+    <string name="about">about</string>
+    <string name="open_midi_file">open midi file</string>
+    <string name="gang_qin_dui_ying_jian_wei_fan_wei">Select the range Lyre keys corresponding to piano keys</string>
+    <string name="row3">Third row</string>
+    <string name="row1">first row</string>
+    <string name="black_key_processing_method">There is no black key in the Lyre, please select the processing method</string>
+    <string name="cb1_text">Two adjacent key chords</string>
+    <string name="cb2_text">Take the key on the left</string>
+    <string name="cb3_text">Take the key on the right</string>
+    <string name="cb4_text">Don\'t play</string>
+    <string name="open_system_settings">Go to the settings self open developer options, and then open the pointer location</string>
+    <string name="save_screen_coordinates">Save coordinates</string>
+    <string name="tansposition">transposition：0</string>
+    <string name="analyze">Analysis \u0026 selection</string>
+    <string name="run">Run</string>
+    <string name="start_floating_window">start floating window</string>
+    <string name="ok">ok</string>
+    <string name="cancel">cancel</string>
+    <string name="got_it">got it</string>
+    <string name="save_failed">Save failed!</string>
+    <string name="save_failed_msg">Please fill in all coordinates before saving</string>
+    <string name="analyzing">analyzing……</string>
+    <string name="analyzing_msg">Analyzing the quantity of black keys remaining after transposition</string>
+
+    <string name="screen_coordinates">Please enter the screen coordinates corresponding to the key</string>
+    <string name="package_name">top.weixiansen574.LyrePlayer</string>
+    <string name="accessibility_service_description">Without the dependence of root clicking on the screen, you can automatically click on the screen when it is turned on</string>
+    <string name="saved_successfully">Saved successfully!</string>
+
+    <string name="please_select_an_offset">Please select an tansposition</string>
+    <string name="note_transposition">tansposition：</string>
+    <string name="file_data_is_corrupted">File data is corrupted!</string>
+    <string name="file_data_is_corrupted_msg">This may be caused by an unexpected interruption while downloading the file or by using the fake disk to store the file \n please reselect the file</string>
+    <string name="black_quantity">black key quantity：</string>
+    <string name="Error_coordinates_are_empty">Error coordinates are empty</string>
+    <string name="Error_coordinates_are_empty_msg">Error coordinates are empty msg</string>
+    <string name="floating_window_permission_is_required">floating window permission is required</string>
+    <string name="Accessibility_required">Accessibility service is also required</string>
+    <string name="Accessibility_required_msg">This is the necessary permission to click on the screen\nPlease find \"Genshin Lyre midi player and open it\" \nAfter the program is closed, it needs to be reopened. Please understand!</string>
+    <string name="Processing_MIDI_data">Processing MIDI data</string>
+    <string name="Processing_MIDI_data_msg">MIDI data is being processed according to your settings. Please wait...</string>
+    <string name="read_midi_success_and_track_quantity">Reading MIDI succeeded! quantity of tracks：</string>
+    <string name="End_of_performance">End of performance！\n performance by Genshin Lyre midi player</string>
+    <string name="Do_not_click_repeatedly_to_play">Please do not click repeatedly while playing</string>
+    <string name="stops_running">stops running</string>
+    <string name="Suspended_window_closed">floatiy window closed</string>
+    <string-array name="spinner3_array">
+        <item>Third row</item>
+        <item>Second row</item>
+    </string-array>
+    <string-array name="spinner4_array">
+        <item>Third row</item>
+        <item>Second row</item>
+        <item>first row</item>
+    </string-array>
+    <string-array name="spinner5_array">
+        <item>Third row</item>
+        <item>Second row</item>
+        <item>first row</item>
+    </string-array>
+    <string-array name="spinner6_array">
+        <item>Second row</item>
+        <item>first row</item>
+    </string-array>
+</resources>

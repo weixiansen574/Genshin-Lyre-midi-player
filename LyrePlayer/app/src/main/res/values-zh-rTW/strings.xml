@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">原神midi自動演奏器</string>
+    <string name="app_version">3.0.0</string>
+    <string name="developer">開發者：韦先森574</string>
+    <string name="about">關於</string>
+    <string name="open_midi_file">打開midi檔案</string>
+    <string name="gang_qin_dui_ying_jian_wei_fan_wei">選擇鋼琴按鍵對應原神鍵位的範圍</string>
+    <string name="row3">第三排</string>
+    <string name="row1">第一排</string>
+    <string name="black_key_processing_method">原神沒有半音（黑鍵），請選擇處理方式</string>
+    <string name="cb1_text">相鄰兩鍵和絃</string>
+    <string name="cb2_text">取左邊的按鍵</string>
+    <string name="cb3_text">取右邊的按鍵</string>
+    <string name="cb4_text">不彈</string>
+    <string name="open_system_settings">前往設定自行打開開發者選項，再打開指針位置</string>
+    <string name="save_screen_coordinates">保存座標</string>
+    <string name="tansposition">移調：0</string>
+    <string name="analyze">分析\u0026選擇</string>
+    <string name="run">運行腳本</string>
+    <string name="start_floating_window">啟動懸浮窗</string>
+    <string name="ok">確定</string>
+    <string name="cancel">取消</string>
+    <string name="got_it">知道了</string>
+    <string name="save_failed">保存失敗！</string>
+    <string name="save_failed_msg">請填寫完所有座標再保存</string>
+    <string name="analyzing">分析中……</string>
+    <string name="analyzing_msg">正在分析移調後剩餘的半音（黑鍵）數</string>
+
+
+    <string name="screen_coordinates">請輸入按鈕對應的屏幕座標</string>
+    <string name="package_name">top.weixiansen574.LyrePlayer</string>
+    <string name="accessibility_service_description">免root點擊屏幕的依賴，開啟即可實現自動點擊屏幕</string>
+    <string name="saved_successfully">保存成功！</string>
+
+    <string name="please_select_an_offset">請選擇偏移量</string>
+    <string name="note_transposition">移調：</string>
+    <string name="file_data_is_corrupted">檔案數據已損壞！</string>
+    <string name="file_data_is_corrupted_msg">這可能因下載檔案時意外中斷或使用擴容盤存儲檔案所導致。\n請重新選擇檔案</string>
+    <string name="black_quantity">黑鍵數：</string>
+    <string name="Error_coordinates_are_empty">錯誤：座標為空</string>
+    <string name="Error_coordinates_are_empty_msg">請將所有座標填寫完並保存</string>
+    <string name="floating_window_permission_is_required">需要懸浮窗許可權，請授予</string>
+    <string name="Accessibility_required">還需要無障礙許可權</string>
+    <string name="Accessibility_required_msg">這是點擊荧幕的必要許可權\n請找到“原神midi自動演奏器”並打開\n程式關閉後需要重新開啟，略煩請諒解！</string>
+    <string name="Processing_MIDI_data">處理midi數據</string>
+    <string name="Processing_MIDI_data_msg">正在按照您的設定處理midi數據，請稍後...</string>
+    <string name="read_midi_success_and_track_quantity">讀取midi成功！ 軌道數：</string>
+    <string name="End_of_performance">演奏結束！\n演奏by原神midi自動演奏器</string>
+    <string name="Do_not_click_repeatedly_to_play">正在演奏中，請勿重複點擊播放</string>
+    <string name="stops_running">腳本停止運行</string>
+    <string name="Suspended_window_closed">懸浮窗已關閉</string>
+    <string-array name="spinner3_array">
+        <item>第三排</item>
+        <item>第二排</item>
+    </string-array>
+    <string-array name="spinner4_array">
+        <item>第三排</item>
+        <item>第二排</item>
+        <item>第一排</item>
+    </string-array>
+    <string-array name="spinner5_array">
+        <item>第三排</item>
+        <item>第二排</item>
+        <item>第一排</item>
+    </string-array>
+    <string-array name="spinner6_array">
+        <item>第二排</item>
+        <item>第一排</item>
+    </string-array>
+</resources>
