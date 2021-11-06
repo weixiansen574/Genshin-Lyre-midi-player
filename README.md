@@ -1,4 +1,4 @@
-# Genshin-Lyre-midi-player
+# 原神midi自动演奏器
 基于安卓无障碍服务的原神midi自动演奏器（自动弹琴）  
 
 ![image](https://github.com/weixiansen574/Genshin-Lyre-midi-player/blob/main/screenshot.jpg)
