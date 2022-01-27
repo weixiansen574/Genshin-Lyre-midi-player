@@ -3,6 +3,8 @@ package top.weixiansen574.LyrePlayer;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableString;
@@ -13,11 +15,20 @@ import android.view.View;
 import android.widget.TextView;
 
 public class AboutActivity extends AppCompatActivity {
-    TextView github,bilibili,youtube;
+    TextView versionName,github,bilibili,youtube;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
+
+        versionName = findViewById(R.id.version_name);
+        PackageManager packageManager = getPackageManager();
+        try {
+            PackageInfo packageInfo = packageManager.getPackageInfo(getPackageName(),0);
+            versionName.setText(packageInfo.versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
         github = findViewById(R.id.github);
         bilibili = findViewById(R.id.bilibili);
         youtube = findViewById(R.id.youtube);

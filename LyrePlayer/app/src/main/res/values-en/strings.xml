@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Genshin Lyre midi player</string>
-    <string name="app_version">3.0.0</string>
     <string name="developer">developer：weixiansen574</string>
     <string name="about">about</string>
     <string name="open_midi_file">open midi file</string>
@@ -28,7 +27,6 @@
     <string name="analyzing_msg">Analyzing the quantity of black keys remaining after transposition</string>
 
     <string name="screen_coordinates">Please enter the screen coordinates corresponding to the key</string>
-    <string name="package_name">top.weixiansen574.LyrePlayer</string>
     <string name="accessibility_service_description">Without the dependence of root clicking on the screen, you can automatically click on the screen when it is turned on</string>
     <string name="saved_successfully">Saved successfully!</string>
 
@@ -46,9 +44,15 @@
     <string name="Processing_MIDI_data_msg">MIDI data is being processed according to your settings. Please wait...</string>
     <string name="read_midi_success_and_track_quantity">Reading MIDI succeeded! quantity of tracks：</string>
     <string name="End_of_performance">End of performance！\n performance by Genshin Lyre midi player</string>
-    <string name="Do_not_click_repeatedly_to_play">Please do not click repeatedly while playing</string>
     <string name="stops_running">stops running</string>
     <string name="Suspended_window_closed">floatiy window closed</string>
+    <string name="file_mame_waning">Warning: the file name seems to be abnormal!</string>
+    <string name="file_name_warning_message">In order to ensure that the file name can be displayed normally, please do not use other file managers to select files! Because the URI returned by some applications is not standardized \n file name:</string>
+    <string name="file_name_warning_message1">\nHowever, the abnormal file name does not affect the run</string>
+    <string name="filename">file name：</string>
+    <string name="error_reading_MIDI">Error reading MIDI!</string>
+    <string name="exception_details">exception details:</string>
+    <string name="file_help">选择文件帮助</string>
     <string-array name="spinner3_array">
         <item>Third row</item>
         <item>Second row</item>

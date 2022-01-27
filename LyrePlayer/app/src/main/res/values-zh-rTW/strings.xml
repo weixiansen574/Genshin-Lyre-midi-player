@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">原神midi自動演奏器</string>
-    <string name="app_version">3.0.0</string>
     <string name="developer">開發者：韦先森574</string>
     <string name="about">關於</string>
     <string name="open_midi_file">打開midi檔案</string>
@@ -29,7 +28,6 @@
 
 
     <string name="screen_coordinates">請輸入按鈕對應的屏幕座標</string>
-    <string name="package_name">top.weixiansen574.LyrePlayer</string>
     <string name="accessibility_service_description">免root點擊屏幕的依賴，開啟即可實現自動點擊屏幕</string>
     <string name="saved_successfully">保存成功！</string>
 
@@ -47,9 +45,33 @@
     <string name="Processing_MIDI_data_msg">正在按照您的設定處理midi數據，請稍後...</string>
     <string name="read_midi_success_and_track_quantity">讀取midi成功！ 軌道數：</string>
     <string name="End_of_performance">演奏結束！\n演奏by原神midi自動演奏器</string>
-    <string name="Do_not_click_repeatedly_to_play">正在演奏中，請勿重複點擊播放</string>
     <string name="stops_running">腳本停止運行</string>
     <string name="Suspended_window_closed">懸浮窗已關閉</string>
+    <string name="file_mame_waning">警告：檔案名稱好像不正常！</string>
+    <string name="file_name_warning_message">為了保證檔案名稱能正常顯示，請不要使用其他檔案管理器選擇檔案！ 因為部分應用返回的URI不規範。\n檔名：</string>
+    <string name="file_name_warning_message1">\n不過檔案名稱不正常不影響運行</string>
+    <string name="filename">檔名：</string>
+    <string name="error_reading_MIDI">讀取midi出錯！</string>
+    <string name="exception_details">异常詳情：</string>
+    <string name="qxsqsb">權限申請失敗，您可以去設置自行打開！ </string>
+    <string name="qsyccqx">請授予存儲權限</string>
+    <string name="qsyccqx_msg_1">否則無法打開midi文件！ \n</string>
+    <string name="qsyccqx_msg_2">不建議“僅在使用中允許”</string>
+    <string name="file_help">選擇文件幫助</string>
+    <string name="show_help">查看幫助</string>
+    <string name="file_help_1">提示“無任何文件”別忙著用上面列出的文件管理器來選擇文件！請點擊點擊右上角“…”，顯示內部存儲空間，才可列出手機存儲裡所有的文件</string>
+    <string name="nmyxzwj">你沒有選擇文件</string>
+    <string name="nmyxzwj_msg">“無任何文件”？請查看幫助！ </string>
+    <string name="stxzfmidiwj">試圖選擇非midi文件</string>
+    <string name="stxzfmidiwj_msg">您打開的文件不是midi文件，請重新選擇！ </string>
+    <string name="file_help_3">為了能夠正常讀出文件名字，若無特殊用途，請全程使用系統裡的安卓的文件管理器（com.google.android.documentsui）來選擇，不是你手機廠商開發的那個系統文件管理器！ </string>
+    <string name="qdyscm">確定要刪除嗎？</string>
+    <string name="querengequ">請你確認歌曲，點擊確定啟動懸浮窗</string>
+    <string name="qxtzbf">請先停止播放！</string>
+    <string name="xfcygb">懸浮窗已關閉，10秒後開始演奏，請把音樂聽完！</string>
+    <string name="zzbf">正在播放</string>
+    <string name="yzt">已暫停</string>
+    <string name="float_list">浮窗播放列表</string>
     <string-array name="spinner3_array">
         <item>第三排</item>
         <item>第二排</item>
@@ -68,4 +90,6 @@
         <item>第二排</item>
         <item>第一排</item>
     </string-array>
+    <string name="file_help_2">顯示內部存儲空間後，點擊左上角“☰”,選擇你的設備內部存儲，即可進入內部存儲目錄</string>
+    <string name="bcdfclb">保存到浮窗播放列表</string>
 </resources>

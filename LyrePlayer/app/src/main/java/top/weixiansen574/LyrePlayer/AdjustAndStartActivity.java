@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -30,10 +31,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -45,7 +49,6 @@ import jp.kshoji.javax.sound.midi.Track;
 import top.weixiansen574.LyrePlayer.midi.Note;
 
 public class AdjustAndStartActivity extends AppCompatActivity implements View.OnClickListener {
-    String path;
     Spinner spinner3;
     Spinner spinner4;
     Spinner spinner5;
@@ -56,11 +59,81 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
     int currentTansposition;
     SharedPreferences midi_info;
     SharedPreferences keyCoordinates;
+    SharedPreferences music_speed_list;
+    Uri midiUri;
+    String midiName;
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        try {
+            midiUri = data.getData();
+            String path = midiUri.getPath();
+            midiName = path.substring(path.lastIndexOf("/") + 1);
+            Toast.makeText(this, "" + getString(R.string.filename) + midiName, Toast.LENGTH_LONG).show();
+            if (!midiName.endsWith(".mid")){
+                //检测文件名
+                new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(getString(R.string.file_mame_waning)).setMessage(getString(R.string.file_name_warning_message) + midiName + getString(R.string.file_name_warning_message1)).setPositiveButton(R.string.show_help, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        startActivity(new Intent(AdjustAndStartActivity.this,FileHelp.class));
+                    }
+                }).setNeutralButton(R.string.got_it, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                }).show();
+            }
+        } catch (RuntimeException e){
+            //如果没有选择到文件
+            e.printStackTrace();
+            new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.nmyxzwj).setMessage(R.string.nmyxzwj_msg).setPositiveButton(getString(R.string.show_help), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    finish();
+                    startActivity(new Intent(AdjustAndStartActivity.this,FileHelp.class));
+                }
+            }).setNeutralButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    finish();
+                }
+            }).setCancelable(false).show();
+
+        }
+
+
+    }
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intent0 = getIntent();
+        if(!intent0.getBooleanExtra("open_file",false)) {
+            //intent调用系统文件管理器，选择midi文件
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("audio/midi");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent, 1);
+        }else{
+            //被intent启动，直接从URI里获取input stream
+            midiUri = intent0.getData();
+            String path = midiUri.getEncodedPath();
+            midiName = path.substring(path.lastIndexOf("/") + 1);
+            midiName = Uri.decode(midiName);
+            System.out.println(fileHead4Byte());
+            //判断是否是midi文件
+            if(!fileHead4Byte().equals("4d 54 68 64 ")){
+                new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.stxzfmidiwj).setMessage(R.string.stxzfmidiwj_msg).setPositiveButton(getString(R.string.got_it), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                    }
+                }).setCancelable(false).show();
+            }
+            Toast.makeText(this,getString(R.string.filename) + midiName,Toast.LENGTH_SHORT).show();
+        }
         this.setContentView(R.layout.activity_adjust_and_start);
         midi_info = getSharedPreferences("midi_info",Context.MODE_PRIVATE);
+        music_speed_list = getSharedPreferences("music_speed_list",Context.MODE_PRIVATE);
         keyCoordinates = getSharedPreferences("key_coordinates",Context.MODE_PRIVATE);
 
         TextView textView = (TextView) findViewById(R.id.textView);
@@ -68,9 +141,6 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
         start.setOnClickListener(this);
         final TextView tanspositionText = findViewById(R.id.tansposition_text);
 
-        Intent it = getIntent();
-        path = it.getStringExtra("path");
-        Toast.makeText(this,path,Toast.LENGTH_LONG).show();
         spinner3 = (Spinner)this.findViewById(R.id.spinner3);
         spinner4 = (Spinner)this.findViewById(R.id.spinner4);
         spinner5 = (Spinner)this.findViewById(R.id.spinner5);
@@ -103,7 +173,6 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
             y2.setText(keyCoordinates.getInt("y2",0) + "");
             y3.setText(keyCoordinates.getInt("y3",0) + "");
         }
-
 
 
         Button startSettings = findViewById(R.id.launch_setting);
@@ -176,7 +245,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.file_data_is_corrupted).setMessage(R.string.file_data_is_corrupted_msg).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.file_data_is_corrupted).setMessage(getString(R.string.file_data_is_corrupted_msg) + fileHead4Byte() + "正常为：4d 54 68 64").setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             finish();
                                         }
@@ -193,7 +262,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                     @Override
                     public void run() {
                         try {
-                            Sequence midi = MidiSystem.getSequence(new File(path));
+                            Sequence midi = MidiSystem.getSequence(getContentResolver().openInputStream(midiUri));
                             ArrayList<Note> noteList = new ArrayList<>();
                             Track[] midiTracks = midi.getTracks();
                             for (int t = 0; t < midiTracks.length; t++) {
@@ -229,15 +298,73 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                             }
                             hand.sendEmptyMessage(1);
 
-                        } catch (InvalidMidiDataException e) {
+                        } catch (final InvalidMidiDataException e) {
                             e.printStackTrace();
+                            final String s = e.toString();
+                            if (e.getMessage() != "Invalid header") {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.error_reading_MIDI).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                finish();
+                                            }
+                                        });
+                                        alertDialog.setCancelable(false);
+                                        alertDialog.show();
+                                    }
+                                });
+                            }else {
+                                hand.sendEmptyMessage(0);
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
-                            hand.sendEmptyMessage(0);
+                            final String s = e.toString();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.exception_details).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            finish();
+                                        }
+                                    });
+                                    alertDialog.setCancelable(false);
+                                    alertDialog.show();
+                                }
+                            });
                         }
                     }
                 }).start();
 
+            }
+        });
+        //保存到列表
+        Button save_to_list = findViewById(R.id.save_to_list);
+        save_to_list.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View view = View.inflate(AdjustAndStartActivity.this, R.layout.edit_text, null);
+                final EditText text = view.findViewById(R.id.edit_text);
+                text.setText(midiName.replace(".mid",""));
+                new AlertDialog.Builder(AdjustAndStartActivity.this)
+                        .setTitle("请输入你要保存的名字")
+                        .setView(view)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // 获取输入框的内容
+                                processAndSave(text.getText().toString());
+                               // Toast.makeText(AdjustAndStartActivity.this, text.getText().toString() + "  已保存到播放列表", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).show();
             }
         });
 
@@ -252,6 +379,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
 
     }
 
+    //处理midi&打开悬浮窗
     @Override
     public void onClick(View view) {
         if(!keyCoordinates.contains("x1")){
@@ -287,132 +415,208 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                     }
                 }).show();
             } else {
-
-                final ProgressDialog loading = new ProgressDialog(AdjustAndStartActivity.this).show(AdjustAndStartActivity.this, getString(R.string.Processing_MIDI_data), getString(R.string.Processing_MIDI_data_msg), false, true);
-                loading.show();
-                final Handler hand = new Handler(Looper.myLooper()) {
-                    @Override
-                    public void handleMessage(Message msg) {
-                        loading.dismiss();
-                        if (msg.what == 1) {
-                            Intent intent = new Intent(AdjustAndStartActivity.this, FloatingButtonService.class);
-                            intent.putExtra("speed", speed);
-                            startService(intent);
-                        } else if (msg.what == 0) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.file_data_is_corrupted).setMessage(R.string.file_data_is_corrupted_msg).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            finish();
-                                        }
-                                    });
-                                    alertDialog.setCancelable(false);
-                                    alertDialog.show();
-                                }
-                            });
-                        }
-                    }
-                };
-                //根据设定值处理midi数据
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            File file = new File(path);
-
-                            StringBuffer text = new StringBuffer();
-                            StringBuffer text2 = new StringBuffer();
-                            Sequence midi;
-                            ArrayList<Note> noteList = new ArrayList<>();
-                            midi = MidiSystem.getSequence(file);
-                            Track[] midiTracks = midi.getTracks();
-                            final String midiTracksLength = midiTracks.length + "";
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(AdjustAndStartActivity.this, (getString(R.string.read_midi_success_and_track_quantity) + midiTracksLength), Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            for (int t = 0; t < midiTracks.length; t++) {
-                                for (int i = 0; i < midiTracks[t].size(); ++i) {
-                                    byte[] midiMessage;
-                                    MidiEvent midiEvent = midiTracks[t].get(i);
-                                    text.append("tick:" + midiEvent.getTick() + " data:");
-                                    for (byte b : midiMessage = midiEvent.getMessage().getMessage()) {
-                                        text.append(Integer.toHexString(b & 0xFF) + " ");
-                                    }
-                                    if (midiMessage.length == 3) {
-                                        if (midiMessage[0] >= -112 && midiMessage[0] <= -97) {
-                                            //这行判断代码迫于无奈，测试读取midi文件时发现某个midi文件全部只有音符按下没有松开，得重新判断
-                                            if (midiMessage[2] != 0) {
-                                                text.append("类型：音符按下");
-                                                noteList.add(new Note(midiEvent.getTick(), midiMessage[1], true));
-                                            } else {
-                                                text.append("类型：音符松开");
-                                                noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
-                                            }
-
-                                        } else if (midiMessage[0] >= -128 && midiMessage[0] <= -113) {
-                                            text.append("类型：音符松开");
-                                            noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
-                                        }
-                                    }
-                                    //当遇到BPM事件时，设置整首歌的BPM，但不支持动态改变，故仅读一次BPM值,然后再此序列的时序分辨率。
-                                    if (speed == -1 && midiMessage.length == 6 && midiMessage[0] == -1 && midiMessage[1] == 81 && midiMessage[2] == 3) {
-                                        speed = (500 / (float) midi.getResolution()) * (120 / (60000000 / (float) (((midiMessage[3] & 0xFF) * 256 * 256) + ((midiMessage[4] & 0xFF) * 256) + (midiMessage[5] & 0xFF))));
-                                        midi_info.edit().putFloat("speed", speed).commit();
-                                    }
-                                    text.append("\n");
-                                }
-                                text.append("==============\n");
-                            }
-                            //合并音轨并排序音符
-                            Collections.sort(noteList);
-                            //遍历音符列表,并按照调好的配置写入lyreNotes（原神琴音符[21~1]）
-
-                            ArrayList<Note> lyreNotes = new ArrayList<>();
-                            for (Note note : noteList) {
-                                if (note.type()) {
-                                    text2.append(note.toString() + "\n");
-                                    //88键 ======> 36键 ========> 21键
-                                    int note_36 = to36Key(note.getNote() + (11 - tansposition));
-                                    int[] lyreKeys = toLyreKey(note_36);
-                                    if (lyreKeys != null) {
-                                        for (int lyreKey : lyreKeys) {
-                                            lyreNotes.add(new Note(note.getTick(), (byte) lyreKey, note.type()));
-                                        }
-                                    }
-                                }
-                            }
-                            System.out.println(text);
-                            //将处理好的音符存盘
-
-                            File cache = getCacheDir();
-                            cache = new File(cache, "lyreNotes");
-                            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(cache));
-                            oos.writeObject(lyreNotes);
-                            oos.flush();
-                            oos.close();
-                            midi_info.edit().putString("midi_name",file.getName()).commit();
-                            hand.sendEmptyMessage(1);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            hand.sendEmptyMessage(0);
-                        } catch (InvalidMidiDataException e) {
-                            e.printStackTrace();
-
-                        }
-                    }
-
-                }).start();
+                midi_info.edit().putBoolean("isMusicList",false).commit();
+                processAndSave("lyreNotes");
             }
 
 
         }
     }
+    }
+    public String fileHead4Byte(){
+        String _4byte = "";
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(midiUri);
+            for (int i = 0; i < 4; i++) {
+                _4byte += (Integer.toHexString(inputStream.read() & 0xff) + " ");
+            }
+            return _4byte;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+
+    public void processAndSave(final String saveName){
+        final ProgressDialog loading = new ProgressDialog(AdjustAndStartActivity.this).show(AdjustAndStartActivity.this, getString(R.string.Processing_MIDI_data), getString(R.string.Processing_MIDI_data_msg), false, true);
+        loading.show();
+        final Handler hand = new Handler(Looper.myLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                loading.dismiss();
+                if (msg.what == 1) {
+                    Intent intent = new Intent(AdjustAndStartActivity.this, FloatingButtonService.class);
+                    startService(intent);
+                } else if (msg.what == 0) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.file_data_is_corrupted).setMessage(getString(R.string.file_data_is_corrupted_msg) + fileHead4Byte() + "正常为：4d 54 68 64").setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    finish();
+                                }
+                            });
+                            alertDialog.setCancelable(false);
+                            alertDialog.show();
+                        }
+                    });
+                }
+            }
+        };
+        //根据设定值处理midi数据
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    StringBuffer text = new StringBuffer();
+                    StringBuffer text2 = new StringBuffer();
+                    Sequence midi;
+                    ArrayList<Note> noteList = new ArrayList<>();
+                    midi = MidiSystem.getSequence(getContentResolver().openInputStream(midiUri));
+                    Track[] midiTracks = midi.getTracks();
+                    final String midiTracksLength = midiTracks.length + "";
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(AdjustAndStartActivity.this, (getString(R.string.read_midi_success_and_track_quantity) + midiTracksLength), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    for (int t = 0; t < midiTracks.length; t++) {
+                        for (int i = 0; i < midiTracks[t].size(); ++i) {
+                            byte[] midiMessage;
+                            MidiEvent midiEvent = midiTracks[t].get(i);
+                            text.append("tick:" + midiEvent.getTick() + " data:");
+                            for (byte b : midiMessage = midiEvent.getMessage().getMessage()) {
+                                text.append(Integer.toHexString(b & 0xFF) + " ");
+                            }
+                            if (midiMessage.length == 3) {
+                                if (midiMessage[0] >= -112 && midiMessage[0] <= -97) {
+                                    //这行判断代码迫于无奈，测试读取midi文件时发现某个midi文件全部只有音符按下没有松开，得重新判断
+                                    if (midiMessage[2] != 0) {
+                                        text.append("类型：音符按下");
+                                        noteList.add(new Note(midiEvent.getTick(), midiMessage[1], true));
+                                    } else {
+                                        text.append("类型：音符松开");
+                                        noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
+                                    }
+
+                                } else if (midiMessage[0] >= -128 && midiMessage[0] <= -113) {
+                                    text.append("类型：音符松开");
+                                    noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
+                                }
+                            }
+                            //当遇到BPM事件时，设置整首歌的BPM，但不支持动态改变，故仅读一次BPM值,然后再此序列的时序分辨率。
+                            if (speed == -1 && midiMessage.length == 6 && midiMessage[0] == -1 && midiMessage[1] == 81 && midiMessage[2] == 3) {
+                                speed = (500 / (float) midi.getResolution()) * (120 / (60000000 / (float) (((midiMessage[3] & 0xFF) * 256 * 256) + ((midiMessage[4] & 0xFF) * 256) + (midiMessage[5] & 0xFF))));
+                                //判断是想要直接打开悬浮窗还是保存到悬浮列表里（速度）
+                                if(saveName.equals("lyreNotes")) {
+                                    midi_info.edit().putFloat("speed", speed).putString("midi_name",midiName).commit();
+                                }else{
+                                    music_speed_list.edit().putFloat(saveName,speed).commit();
+                                }
+                            }
+                            text.append("\n");
+                        }
+                        text.append("==============\n");
+                    }
+                    //合并音轨并排序音符
+                    Collections.sort(noteList);
+                    //遍历音符列表,并按照调好的配置写入lyreNotes（原神琴音符[21~1]）
+
+                    ArrayList<Note> lyreNotes = new ArrayList<>();
+                    for (Note note : noteList) {
+                        if (note.type()) {
+                            text2.append(note.toString() + "\n");
+                            //88键 ======> 36键 ========> 21键
+                            int note_36 = to36Key(note.getNote() + (11 - tansposition));
+                            int[] lyreKeys = toLyreKey(note_36);
+                            if (lyreKeys != null) {
+                                for (int lyreKey : lyreKeys) {
+                                    lyreNotes.add(new Note(note.getTick(), (byte) lyreKey, note.type()));
+                                }
+                            }
+                        }
+                    }
+                    System.out.println(text);
+                    //将处理好的音符存盘,如果没有要求保存到列悬浮表里就放缓存目录
+                    File lyreNotesFile = null;
+                    if(saveName.equals("lyreNotes")) {
+                        lyreNotesFile = getCacheDir();
+                        lyreNotesFile = new File(lyreNotesFile, "lyreNotes");
+                        midi_info.edit().putString("midi_name",midiName).commit();
+                    }else{
+                        lyreNotesFile = getFilesDir();
+                        lyreNotesFile = new File(lyreNotesFile, "music_list");
+                        if(!lyreNotesFile.exists()){
+                            lyreNotesFile.mkdir();
+                        }
+                        lyreNotesFile = new File(lyreNotesFile,saveName);
+                        midi_info.edit().putString("midi_name",saveName).commit();
+                    }
+                    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(lyreNotesFile));
+                    oos.writeObject(lyreNotes);
+                    oos.flush();
+                    oos.close();
+                    if(saveName.equals("lyreNotes")) {
+                        hand.sendEmptyMessage(1);
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle("文件未找到").setMessage("返回URI类型不规范！请勿使用第三方（包括厂商系统的）文件管理器选择文件！错误的URI：").setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    finish();
+                                }
+                            });
+                            alertDialog.setCancelable(false);
+                            alertDialog.show();
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    final String s = e.toString();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.exception_details).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    finish();
+                                }
+                            });
+                            alertDialog.setCancelable(false);
+                            alertDialog.show();
+                        }
+                    });
+                } catch (final InvalidMidiDataException e) {
+                    e.printStackTrace();
+                    final String s = e.toString();
+                    if (e.getMessage() != "Invalid header") {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.error_reading_MIDI).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        finish();
+                                    }
+                                });
+                                alertDialog.setCancelable(false);
+                                alertDialog.show();
+                            }
+                        });
+                    }else {
+                        hand.sendEmptyMessage(0);
+                    }
+
+                }
+            }
+
+        }).start();
     }
     //按照钢琴按键对应原神键位的范围的设定，将钢琴88个音符压缩成12*3=36个音符，但还包含半音
     public int to36Key(int noteNum){
@@ -493,5 +697,6 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
         return null;
     }
 
-}
+
+    }
 

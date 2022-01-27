@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">原神midi自动演奏器</string>
-    <string name="app_version">3.0.0</string>
     <string name="developer">开发者：韦先森574</string>
     <string name="about">关于</string>
     <string name="open_midi_file">打开midi文件</string>
@@ -28,14 +27,13 @@
 
 
     <string name="screen_coordinates">请输入按钮对应的屏幕坐标</string>
-    <string name="package_name">top.weixiansen574.LyrePlayer</string>
     <string name="accessibility_service_description">免root点击屏幕的依赖，开启即可实现自动点击屏幕</string>
     <string name="saved_successfully">保存成功！</string>
 
     <string name="please_select_an_offset">请选择偏移量</string>
     <string name="note_transposition">移调：</string>
     <string name="file_data_is_corrupted">文件数据已损坏！</string>
-    <string name="file_data_is_corrupted_msg">这可能因下载文件时意外中断或使用扩容盘存储文件所导致。\n请重新选择文件</string>
+    <string name="file_data_is_corrupted_msg">这可能因下载文件时意外中断或使用扩容盘存储文件所导致。\n请重新选择文件\n文件头前4字节：</string>
     <string name="black_quantity">黑键数：</string>
     <string name="Error_coordinates_are_empty">错误：坐标为空</string>
     <string name="Error_coordinates_are_empty_msg">请将所有坐标填写完并保存</string>
@@ -43,12 +41,38 @@
     <string name="Accessibility_required">还需要无障碍权限</string>
     <string name="Accessibility_required_msg">这是点击屏幕的必要权限\n请找到“原神midi自动演奏器”并打开\n程序关闭后需要重新开启，略烦请谅解！</string>
     <string name="Processing_MIDI_data">处理midi数据</string>
-    <string name="Processing_MIDI_data_msg">正在按照您的设置处理midi数据,请稍后...</string>
+    <string name="Processing_MIDI_data_msg">正在按照您的设置处理midi数据,请稍后…</string>
     <string name="read_midi_success_and_track_quantity">读取midi成功！轨道数：</string>
     <string name="End_of_performance">演奏结束！\n演奏by原神midi自动演奏器</string>
-    <string name="Do_not_click_repeatedly_to_play">正在演奏中，请勿重复点击播放</string>
     <string name="stops_running">脚本停止运行</string>
     <string name="Suspended_window_closed">悬浮窗已关闭</string>
+    <string name="file_mame_waning">警告：文件名称好像不正常！</string>
+    <string name="file_name_warning_message">为了保证文件名称能正常显示，请不要使用其他文件管理器选择文件！因为部分应用返回的URI不规范。\n文件名：</string>
+    <string name="file_name_warning_message1">\n不过文件名称不正常不影响运行</string>
+    <string name="filename">文件名：</string>
+    <string name="error_reading_MIDI">读取midi出错！</string>
+    <string name="exception_details">异常详情：</string>
+    <string name="qxsqsb">权限申请失败，您可以去设置自行打开！</string>
+    <string name="qsyccqx">请授予存储权限</string>
+    <string name="qsyccqx_msg_1">否则无法打开midi文件！\n</string>
+    <string name="qsyccqx_msg_2">不建议“仅在使用中允许”</string>
+    <string name="file_help">选择文件帮助</string>
+    <string name="show_help">查看帮助</string>
+    <string name="file_help_1">提示“无任何文件”别忙着用上面列出的文件管理器来选择文件！请点击点击右上角“…”，显示内部存储空间，才可列出手机存储里所有的文件</string>
+    <string name="file_help_2">显示内部存储空间后，点击左上角“☰”,选择你的设备内部存储，即可进入内部存储目录</string>
+    <string name="nmyxzwj">你没有选择文件</string>
+    <string name="nmyxzwj_msg">“无任何文件”？请查看帮助！</string>
+    <string name="stxzfmidiwj">试图选择非midi文件</string>
+    <string name="stxzfmidiwj_msg">您打开的文件不是midi文件，请重新选择！</string>
+    <string name="file_help_3">为了能够正常读出文件名字，若无特殊用途，请全程使用系统里的安卓的文件管理器（com.google.android.documentsui）来选择，不是你手机厂商开发的那个系统文件管理器！</string>
+    <string name="qdyscm">确定要删除吗？</string>
+    <string name="querengequ">请你确认歌曲，点击确定启动悬浮窗</string>
+    <string name="qxtzbf">请先停止播放！</string>
+    <string name="xfcygb">悬浮窗已关闭，10秒后开始演奏，请把音乐听完！</string>
+    <string name="zzbf">正在播放</string>
+    <string name="yzt">已暂停</string>
+    <string name="float_list">浮窗播放列表</string>
+    <string name="bcdfclb">保存到浮窗播放列表</string>
     <string-array name="spinner3_array">
         <item>第三排</item>
         <item>第二排</item>

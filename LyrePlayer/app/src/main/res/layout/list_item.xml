@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textAppearance="?android:attr/textAppearanceListItemSmall"
+    android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall">
+    <TextView
+        android:id="@+id/music_name"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:layout_height="match_parent"/>
+
+    <Button
+        android:id="@+id/delate"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="right"
+        android:background="@drawable/ic_delete_forever_black_48dp"
+        android:focusable="false"
+        android:foreground="?android:attr/selectableItemBackground" />
+</LinearLayout>
