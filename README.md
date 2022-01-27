@@ -12,6 +12,8 @@
 
 将所有参数填写完毕后，点击启动悬浮窗并授予相关权限，此时屏幕上出现个悬浮窗，进入游戏拿起琴然后点击悬浮窗上的“▶”即可开始演奏，“■”终止演奏。由于是操作您的屏幕，所以不支持拖动进度条以及暂停
 
+详细教程：https://www.bilibili.com/video/BV1rL4y1q7FY  
+https://www.youtube.com/watch?v=7-_jsjF2hYc
 #### 关于移调
 如果midi文件中的半音（黑键）过多，使用取左取右的笨方法演奏听起来感觉怪怪的，那么你可以尝试移调！移调就是将音符向左右平移，这样只会改变整首音乐的音调，不会改变旋律等，但可以减少半音的出现，大幅改善演奏效果。什么原理可以自己研究（坏笑）。
 
@@ -57,3 +59,7 @@ https://github.com/kshoji/javax.sound.midi-for-Android 提供的javax.sound.midi
 
 -v3.4.1
 修复上个版本遗留bug：保存到浮窗播放列表一直转圈圈，但其实乐曲已保存。
+
+#### 关于我历史版本没有在github上传
+第一次直接使用网页版github直接上传文件，不知道git版本控制工具，然后想在GitHub更新版本的时候就一脸懵逼。索性不用GitHub直接在分享链接（https://drive.google.com/drive/folders/1jeid9DADcRj_d_5eYT4rdy_QIbDXgti_ ）里放源码压缩包与relase安装包。  
+学会使用git工具后就继续在github更新。
