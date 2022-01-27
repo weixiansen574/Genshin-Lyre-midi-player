@@ -563,6 +563,8 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                     oos.close();
                     if(saveName.equals("lyreNotes")) {
                         hand.sendEmptyMessage(1);
+                    }else {
+                        hand.sendEmptyMessage(2);
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
