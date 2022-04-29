@@ -40,7 +40,7 @@
     <string name="Error_coordinates_are_empty_msg">請將所有座標填寫完並保存</string>
     <string name="floating_window_permission_is_required">需要懸浮窗許可權，請授予</string>
     <string name="Accessibility_required">還需要無障礙許可權</string>
-    <string name="Accessibility_required_msg">這是點擊荧幕的必要許可權\n請找到“原神midi自動演奏器”並打開\n程式關閉後需要重新開啟，略煩請諒解！</string>
+    <string name="Accessibility_required_msg">這是點擊荧幕的必要許可權\n請找到“原神midi自動演奏器”並打開\n程式關閉後需要重新開啟，略煩請諒解！\n\n若出現無障礙權限已開啟但還是重複提示要申請權限，請重啟您的手機！</string>
     <string name="Processing_MIDI_data">處理midi數據</string>
     <string name="Processing_MIDI_data_msg">正在按照您的設定處理midi數據，請稍後...</string>
     <string name="read_midi_success_and_track_quantity">讀取midi成功！ 軌道數：</string>
@@ -92,4 +92,5 @@
     </string-array>
     <string name="file_help_2">顯示內部存儲空間後，點擊左上角“☰”,選擇你的設備內部存儲，即可進入內部存儲目錄</string>
     <string name="bcdfclb">保存到浮窗播放列表</string>
+    <string name="dkxflb">打开悬浮列表</string>
 </resources>

@@ -1,8 +1,10 @@
 package top.weixiansen574.LyrePlayer;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,18 +35,53 @@ import java.util.Arrays;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     Button openMidiFile;
     Button openFloatList;
+    Button selectFromServer;
+    SharedPreferences server;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.activity_main);
         this.openMidiFile = this.findViewById(R.id.openMidiFile);
         this.openMidiFile.setOnClickListener(this);
-
+        server = getSharedPreferences("server", Context.MODE_PRIVATE);
         openFloatList = findViewById(R.id.open_float_list);
         openFloatList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, FloatList.class));
+            }
+        });
+        selectFromServer = findViewById(R.id.select_from_server);
+        selectFromServer.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                View view = View.inflate(MainActivity.this,R.layout.edit_text,null);
+                final EditText editText = view.findViewById(R.id.edit_text);
+                editText.setText(server.getString("address","weixiansen574.top:1180"));
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("服务器地址")
+                        .setView(view)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                server.edit().putString("address",editText.getText().toString()).commit();
+                            }
+                        })
+                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).show();
+                return false;
+            }
+        });
+        selectFromServer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this,SelecFromServerActivity.class));
             }
         });
         Intent intent0 = getIntent();

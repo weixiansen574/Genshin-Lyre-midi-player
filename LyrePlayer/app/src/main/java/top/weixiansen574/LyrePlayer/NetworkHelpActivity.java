@@ -5,18 +5,25 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 
-public class FileHelp extends AppCompatActivity {
+public class NetworkHelpActivity extends AppCompatActivity {
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //工具栏返回上一级按钮
-        if (item.getItemId() == 16908332){
-            finish();
+        switch (item.getItemId()) {
+            case 16908332:
+                finish();
+                break;
+            default:
+                break;
         }
+
         return true;
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_file_help);
+        setContentView(R.layout.activity_network_help);
+
     }
 }

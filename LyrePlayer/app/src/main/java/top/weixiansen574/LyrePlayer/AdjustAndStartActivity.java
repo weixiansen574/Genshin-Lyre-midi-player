@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -56,12 +57,21 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
     RadioGroup blackKeySettings;
     float speed = -1;
     int tansposition = 11;
-    int currentTansposition;
+    int currentTansposition = -1;
     SharedPreferences midi_info;
     SharedPreferences keyCoordinates;
     SharedPreferences music_speed_list;
     Uri midiUri;
     String midiName;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        //工具栏返回上一级按钮
+        if (item.getItemId() == 16908332){
+            finish();
+        }
+        return true;
+    }
+
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         try {
@@ -237,7 +247,11 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                             }).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                    tansposition = currentTansposition;
+                                    if (currentTansposition == -1){
+                                        tansposition = 11;
+                                    }else{
+                                        tansposition = currentTansposition;
+                                    }
                                     tanspositionText.setText(getString(R.string.note_transposition) + ((11 - tansposition) > 0 ? "+":"") + (11 - tansposition));
                                 }
                             }).show();
@@ -355,7 +369,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                             public void onClick(DialogInterface dialog, int which) {
                                 // 获取输入框的内容
                                 processAndSave(text.getText().toString());
-                               // Toast.makeText(AdjustAndStartActivity.this, text.getText().toString() + "  已保存到播放列表", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(AdjustAndStartActivity.this, text.getText().toString() + "  已保存到播放列表", Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -479,12 +493,6 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                     midi = MidiSystem.getSequence(getContentResolver().openInputStream(midiUri));
                     Track[] midiTracks = midi.getTracks();
                     final String midiTracksLength = midiTracks.length + "";
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(AdjustAndStartActivity.this, (getString(R.string.read_midi_success_and_track_quantity) + midiTracksLength), Toast.LENGTH_SHORT).show();
-                        }
-                    });
                     for (int t = 0; t < midiTracks.length; t++) {
                         for (int i = 0; i < midiTracks[t].size(); ++i) {
                             byte[] midiMessage;

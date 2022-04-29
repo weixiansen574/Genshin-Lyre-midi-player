@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -25,6 +26,14 @@ public class FloatList extends AppCompatActivity {
     ListView music_list;
     SharedPreferences music_speed_list;
     SharedPreferences midi_info;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        //工具栏返回上一级按钮
+        if (item.getItemId() == 16908332){
+            finish();
+        }
+        return true;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -6,16 +6,24 @@
     android:orientation="vertical">
 <Button
     android:id="@+id/openMidiFile"
-    android:layout_width="120dp"
-    android:layout_height="wrap_content"
+    android:drawableStart="@drawable/ic_floder"
+    android:layout_width="200dp"
+    android:layout_height="60dp"
     android:layout_gravity="center"
     android:textAllCaps="false"
     android:text="@string/open_midi_file"/>
     <Button
         android:id="@+id/open_float_list"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:text="打开悬浮列表"
+        android:drawableStart="@drawable/ic_list"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:text="@string/dkxflb"
         android:textAllCaps="false"/>
-
+<Button
+    android:drawableStart="@drawable/ic_server"
+    android:id="@+id/select_from_server"
+    android:layout_width="200dp"
+    android:layout_height="60dp"
+    android:text="从服务器中选择"
+    android:textAllCaps="false"/>
 </LinearLayout>

@@ -39,7 +39,7 @@
     <string name="Error_coordinates_are_empty_msg">请将所有坐标填写完并保存</string>
     <string name="floating_window_permission_is_required">需要悬浮窗权限,请授予</string>
     <string name="Accessibility_required">还需要无障碍权限</string>
-    <string name="Accessibility_required_msg">这是点击屏幕的必要权限\n请找到“原神midi自动演奏器”并打开\n程序关闭后需要重新开启，略烦请谅解！</string>
+    <string name="Accessibility_required_msg">这是点击屏幕的必要权限\n请找到“原神midi自动演奏器”并打开\n程序关闭后需要重新开启，略烦请谅解！\n\n若出现无障碍权限已开启但还是重复提示要申请权限，请重启您的手机！</string>
     <string name="Processing_MIDI_data">处理midi数据</string>
     <string name="Processing_MIDI_data_msg">正在按照您的设置处理midi数据,请稍后…</string>
     <string name="read_midi_success_and_track_quantity">读取midi成功！轨道数：</string>
@@ -73,6 +73,7 @@
     <string name="yzt">已暂停</string>
     <string name="float_list">浮窗播放列表</string>
     <string name="bcdfclb">保存到浮窗播放列表</string>
+    <string name="dkxflb">打开悬浮列表</string>
     <string-array name="spinner3_array">
         <item>第三排</item>
         <item>第二排</item>
@@ -91,5 +92,7 @@
         <item>第二排</item>
         <item>第一排</item>
     </string-array>
+    <!-- Strings used for fragments for navigation -->
+    <string name="previous">Previous</string>
 
 </resources>

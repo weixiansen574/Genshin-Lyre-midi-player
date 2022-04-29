@@ -11,11 +11,20 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
 public class AboutActivity extends AppCompatActivity {
     TextView versionName,github,bilibili,youtube;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        //工具栏返回上一级按钮
+        if (item.getItemId() == 16908332){
+            finish();
+        }
+        return true;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

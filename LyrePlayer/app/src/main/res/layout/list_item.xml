@@ -3,22 +3,37 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:textAppearance="?android:attr/textAppearanceListItemSmall"
-    android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+
     android:minHeight="?android:attr/listPreferredItemHeightSmall">
+    <LinearLayout
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:gravity="center">
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_music"/>
+    </LinearLayout>
     <TextView
         android:id="@+id/music_name"
         android:textAppearance="?android:attr/textAppearanceListItemSmall"
         android:layout_width="match_parent"
         android:layout_weight="1"
+        android:maxLines="2"
+        android:ellipsize="end"
         android:gravity="center_vertical"
         android:layout_height="match_parent"/>
-
-    <Button
-        android:id="@+id/delate"
+    <LinearLayout
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_gravity="right"
-        android:background="@drawable/ic_delete_forever_black_48dp"
+        android:gravity="center">
+    <Button
+        android:id="@+id/delate"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:focusable="false"
-        android:foreground="?android:attr/selectableItemBackground" />
+        android:foreground="@drawable/ic_delete" />
+    </LinearLayout>
 </LinearLayout>
