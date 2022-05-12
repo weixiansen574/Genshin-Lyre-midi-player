@@ -55,17 +55,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         selectFromServer.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                View view = View.inflate(MainActivity.this,R.layout.edit_text,null);
+                View view = View.inflate(MainActivity.this, R.layout.edit_text, null);
                 final EditText editText = view.findViewById(R.id.edit_text);
-                editText.setText(server.getString("address","weixiansen574.top:1180"));
-                new AlertDialog.Builder(MainActivity.this)
+                editText.setText(server.getString("address", "lyre-player.weixiansen574.top:1180"));
+                AlertDialog setServerDialog = new AlertDialog.Builder(MainActivity.this)
                         .setTitle("服务器地址")
+                        .setMessage("仅开发者调试用，请不要乱改！")
                         .setView(view)
                         .setPositiveButton("确定", new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                server.edit().putString("address",editText.getText().toString()).commit();
+                                server.edit().putString("address", editText.getText().toString()).commit();
                             }
                         })
                         .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -74,14 +75,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
                             }
-                        }).show();
+                        })
+                        .setNeutralButton("默认",null).show();
+                setServerDialog.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        editText.setText("lyre-player.weixiansen574.top:1180");
+                    }
+                });
                 return false;
             }
         });
         selectFromServer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,SelecFromServerActivity.class));
+                startActivity(new Intent(MainActivity.this, SelecFromServerActivity.class));
             }
         });
         Intent intent0 = getIntent();

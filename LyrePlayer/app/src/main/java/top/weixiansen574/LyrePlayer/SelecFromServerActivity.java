@@ -55,6 +55,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import top.weixiansen574.LyrePlayer.adapter.MusicListAdapterForOnline;
+import top.weixiansen574.LyrePlayer.util.HttpUtil;
 
 public class SelecFromServerActivity extends AppCompatActivity {
     RecyclerView music_list;
@@ -96,7 +97,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
         music_list = findViewById(R.id.online_music_library);
         uploadInfo = getSharedPreferences("upload_info", Context.MODE_PRIVATE);
         swipe = findViewById(R.id.swipe);
-        SERVER_ADDRESS = getSharedPreferences("server", Context.MODE_PRIVATE).getString("address", "weixiansen574.top:1180");
+        SERVER_ADDRESS = getSharedPreferences("server", Context.MODE_PRIVATE).getString("address", "lyre-player.weixiansen574.top:1180");
         linearLayoutManager = new LinearLayoutManager(SelecFromServerActivity.this);
         music_list.setLayoutManager(linearLayoutManager);
         music_list.addItemDecoration(new DividerItemDecoration(SelecFromServerActivity.this, DividerItemDecoration.VERTICAL));
@@ -171,7 +172,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
                     .setTitle("填写上传信息")
                     .setView(view)
                     .setPositiveButton("上传", null)
-                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
@@ -209,7 +210,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
                                     .addFormDataPart("duration",midiDuration+"")
                                     .addFormDataPart("file", upload_name.getText().toString(), requestBody)
                                     .build();
-                            OkHttpClient okHttpClient = new OkHttpClient();
+                            OkHttpClient okHttpClient = HttpUtil.getClient();
                             Request request = new Request.Builder()
                                     .post(multipartBody)
                                     .url("http://" + SERVER_ADDRESS + "/upload")
@@ -269,7 +270,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
         currentPage = 1;
         hasFootView = true;
         final ProgressDialog progressDialog = new ProgressDialog(SelecFromServerActivity.this).show(SelecFromServerActivity.this, "正在获取最新音乐……", "", false, false);
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = HttpUtil.getClient();
         Request request = new Request.Builder().url("http://" + SERVER_ADDRESS + "/latest_songs").build();
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -298,7 +299,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
     }
 
     private void getLatestSongsList(int page) {
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = HttpUtil.getClient();
         Request request = new Request.Builder().url("http://" + SERVER_ADDRESS + "/latest_songs?page=" + page).build();
         Call call = client.newCall(request);
         call.enqueue(new Callback() {
@@ -329,15 +330,15 @@ public class SelecFromServerActivity extends AppCompatActivity {
         View view = View.inflate(SelecFromServerActivity.this, R.layout.edit_text, null);
         final EditText text = view.findViewById(R.id.edit_text);
         new AlertDialog.Builder(SelecFromServerActivity.this)
-                .setTitle("搜索")
+                .setTitle(R.string.search)
                 .setView(view)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         final ProgressDialog progressDialog = new ProgressDialog(SelecFromServerActivity.this).show(SelecFromServerActivity.this, "搜索中……", "", false, false);
 
-                        OkHttpClient client = new OkHttpClient();
+                        OkHttpClient client = HttpUtil.getClient();
                         Request request = new Request.Builder().url("http://" + SERVER_ADDRESS + "/search?name=" + text.getText()).build();
                         client.newCall(request).enqueue(new Callback() {
                             @Override
@@ -368,7 +369,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
 
                     }
                 })
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -426,9 +427,9 @@ public class SelecFromServerActivity extends AppCompatActivity {
                     break;
                 case 4:
                     new AlertDialog.Builder(SelecFromServerActivity.this)
-                            .setTitle("无法连接至服务器")
+                            .setTitle(R.string.wfljzfwq)
                             .setMessage((String) msg.obj)
-                            .setPositiveButton("查看帮助", new DialogInterface.OnClickListener() {
+                            .setPositiveButton(R.string.ckbz, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     startActivity(new Intent(SelecFromServerActivity.this,NetworkHelpActivity.class));

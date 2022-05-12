@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -61,8 +62,8 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
     SharedPreferences midi_info;
     SharedPreferences keyCoordinates;
     SharedPreferences music_speed_list;
-    Uri midiUri;
-    String midiName;
+    static Uri midiUri;
+    static String midiName;
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         //工具栏返回上一级按钮
@@ -110,38 +111,42 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
             }).setCancelable(false).show();
 
         }
+        System.out.println("result uri:" + midiUri);
 
 
     }
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent0 = getIntent();
-        if(!intent0.getBooleanExtra("open_file",false)) {
-            //intent调用系统文件管理器，选择midi文件
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("audio/midi");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(intent, 1);
-        }else{
-            //被intent启动，直接从URI里获取input stream
-            midiUri = intent0.getData();
-            String path = midiUri.getEncodedPath();
-            midiName = path.substring(path.lastIndexOf("/") + 1);
-            midiName = Uri.decode(midiName);
-            System.out.println(fileHead4Byte());
-            //判断是否是midi文件
-            if(!fileHead4Byte().equals("4d 54 68 64 ")){
-                new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.stxzfmidiwj).setMessage(R.string.stxzfmidiwj_msg).setPositiveButton(getString(R.string.got_it), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        finish();
-                    }
-                }).setCancelable(false).show();
+        //判断是否是旋转屏幕
+        if (savedInstanceState == null) {
+            Intent intent0 = getIntent();
+            if (!intent0.getBooleanExtra("open_file", false)) {
+                //intent调用系统文件管理器，选择midi文件
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("audio/midi");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(intent, 1);
+            } else {
+                //被intent启动，直接从URI里获取input stream
+                midiUri = intent0.getData();
+                String path = midiUri.getEncodedPath();
+                midiName = path.substring(path.lastIndexOf("/") + 1);
+                midiName = Uri.decode(midiName);
+                System.out.println(fileHead4Byte());
+                //判断是否是midi文件
+                if (!fileHead4Byte().equals("4d 54 68 64 ")) {
+                    new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.stxzfmidiwj).setMessage(R.string.stxzfmidiwj_msg).setPositiveButton(getString(R.string.got_it), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                        }
+                    }).setCancelable(false).show();
+                }
+                Toast.makeText(this, getString(R.string.filename) + midiName, Toast.LENGTH_SHORT).show();
             }
-            Toast.makeText(this,getString(R.string.filename) + midiName,Toast.LENGTH_SHORT).show();
         }
-        this.setContentView(R.layout.activity_adjust_and_start);
+        this.setContentView(R.layout.activity_adjust_and_start_new);
         midi_info = getSharedPreferences("midi_info",Context.MODE_PRIVATE);
         music_speed_list = getSharedPreferences("music_speed_list",Context.MODE_PRIVATE);
         keyCoordinates = getSharedPreferences("key_coordinates",Context.MODE_PRIVATE);

@@ -94,5 +94,8 @@
     </string-array>
     <!-- Strings used for fragments for navigation -->
     <string name="previous">Previous</string>
+    <string name="search">搜索</string>
+    <string name="wfljzfwq">无法连接至服务器</string>
+    <string name="ckbz">查看帮助</string>
 
 </resources>

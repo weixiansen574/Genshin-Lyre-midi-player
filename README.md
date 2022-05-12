@@ -60,6 +60,12 @@ https://github.com/kshoji/javax.sound.midi-for-Android 提供的javax.sound.midi
 -v3.4.1
 修复上个版本遗留bug：保存到浮窗播放列表一直转圈圈，但其实乐曲已保存。
 
+
+
+……更多版本更新信息详见 [Release](https://github.com/weixiansen574/Genshin-Lyre-midi-player/releases)
+
+
+
 #### 关于我历史版本没有在github上传
 第一次直接使用网页版github直接上传文件，不知道git版本控制工具，然后想在GitHub更新版本的时候就一脸懵逼。索性不用GitHub直接在分享链接（https://drive.google.com/drive/folders/1jeid9DADcRj_d_5eYT4rdy_QIbDXgti_ ）里放源码压缩包与relase安装包。  
 学会使用git工具后就继续在github更新。

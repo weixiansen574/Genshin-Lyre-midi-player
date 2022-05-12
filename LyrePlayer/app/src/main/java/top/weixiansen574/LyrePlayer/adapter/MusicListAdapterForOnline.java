@@ -44,6 +44,7 @@ import okhttp3.Response;
 import top.weixiansen574.LyrePlayer.AdjustAndStartActivity;
 import top.weixiansen574.LyrePlayer.R;
 import top.weixiansen574.LyrePlayer.SelecFromServerActivity;
+import top.weixiansen574.LyrePlayer.util.HttpUtil;
 
 public class MusicListAdapterForOnline extends RecyclerView.Adapter {
     public Context context;
@@ -172,7 +173,7 @@ public class MusicListAdapterForOnline extends RecyclerView.Adapter {
                                                     .url("http://" + SelecFromServerActivity.SERVER_ADDRESS + "/delete")
                                                     .post(requestBody)
                                                     .build();
-                                            OkHttpClient okHttpClient = new OkHttpClient();
+                                            OkHttpClient okHttpClient = HttpUtil.getClient();
                                             Call call = okHttpClient.newCall(request);
                                             final Handler handler = new Handler(Looper.myLooper()){
                                                 @Override
@@ -267,7 +268,7 @@ public class MusicListAdapterForOnline extends RecyclerView.Adapter {
                                         }
                                     };
 
-                                    OkHttpClient okHttpClient = new OkHttpClient();
+                                    OkHttpClient okHttpClient = HttpUtil.getClient();
                                     Request request = new Request.Builder().url("http://" + SelecFromServerActivity.SERVER_ADDRESS + "/download?hash=" + objects.get(getLayoutPosition()).getString("hash")).build();
                                     okHttpClient.newCall(request).enqueue(new Callback() {
                                         @Override
