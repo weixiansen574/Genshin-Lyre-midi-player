@@ -3,7 +3,7 @@
 
 ![image](https://github.com/weixiansen574/Genshin-Lyre-midi-player/blob/main/screenshot.jpg)
 
-现已适配简体中文、繁体中文、英语
+现已适配简体中文、繁体中文、~~英语~~
 ## 使用方法
 选择midi文件并打开，第一次运行软件需配置坐标，可在开发者选项中打开指针位置显示坐标，填写完毕并保存。因为许多屏幕的分辨率都不相同，所以需要自己标出原神琴的按键所对应屏幕坐标以确定按键位置。填写完保存后，后面进来就无需再填写。 
 
@@ -17,9 +17,9 @@ https://www.youtube.com/watch?v=7-_jsjF2hYc
 #### 关于移调
 如果midi文件中的半音（黑键）过多，使用取左取右的笨方法演奏听起来感觉怪怪的，那么你可以尝试移调！移调就是将音符向左右平移，这样只会改变整首音乐的音调，不会改变旋律等，但可以减少半音的出现，大幅改善演奏效果。什么原理可以自己研究（坏笑）。
 
-## 特别感谢
-https://github.com/kshoji/javax.sound.midi-for-Android 提供的javax.sound.midi移植包
-
+## 使用的开源库
+https://github.com/kshoji/javax.sound.midi-for-Android 提供的javax.sound.midi移植包（已弃用）  
+https://github.com/LeffelMania/android-midi-lib
 ## 更新日志
 -v1.0
 风花节末完成脚本制作，基于auto.js
@@ -59,7 +59,6 @@ https://github.com/kshoji/javax.sound.midi-for-Android 提供的javax.sound.midi
 
 -v3.4.1
 修复上个版本遗留bug：保存到浮窗播放列表一直转圈圈，但其实乐曲已保存。
-
 
 
 ……更多版本更新信息详见 [Release](https://github.com/weixiansen574/Genshin-Lyre-midi-player/releases)

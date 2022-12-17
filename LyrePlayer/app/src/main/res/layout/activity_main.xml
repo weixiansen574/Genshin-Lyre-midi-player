@@ -24,6 +24,6 @@
     android:id="@+id/select_from_server"
     android:layout_width="200dp"
     android:layout_height="60dp"
-    android:text="从服务器中选择"
+    android:text="@string/zhaixianquku"
     android:textAllCaps="false"/>
 </LinearLayout>

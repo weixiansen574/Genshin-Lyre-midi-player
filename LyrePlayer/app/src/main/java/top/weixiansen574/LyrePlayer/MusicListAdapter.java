@@ -6,18 +6,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.List;
 
 public class MusicListAdapter extends ArrayAdapter {
     private int resourceId;
-    FloatList context;
+    FloatListActivity context;
     public MusicListAdapter(Context context, int resource,List<String> objects) {
         super(context, resource, objects);
-        this.context = (FloatList) context;
+        this.context = (FloatListActivity) context;
         resourceId = resource;
     }
 

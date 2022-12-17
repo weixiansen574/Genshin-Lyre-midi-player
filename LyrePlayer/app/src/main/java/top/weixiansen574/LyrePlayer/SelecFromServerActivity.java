@@ -1,13 +1,5 @@
 package top.weixiansen574.LyrePlayer;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -19,7 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,10 +18,19 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.leff.midi.NotIsMidiFileException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -41,11 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
-import jp.kshoji.javax.sound.midi.InvalidMidiDataException;
-import jp.kshoji.javax.sound.midi.MidiSystem;
-import jp.kshoji.javax.sound.midi.Sequence;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -55,6 +51,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import top.weixiansen574.LyrePlayer.adapter.MusicListAdapterForOnline;
+import top.weixiansen574.LyrePlayer.midi.MidiProcessor;
+import top.weixiansen574.LyrePlayer.midi.Note;
 import top.weixiansen574.LyrePlayer.util.HttpUtil;
 
 public class SelecFromServerActivity extends AppCompatActivity {
@@ -107,7 +105,6 @@ public class SelecFromServerActivity extends AppCompatActivity {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     if (lastVisibleItemPosition == linearLayoutManager.getItemCount() - 1) {
                         //当滑动到底部时
-                        System.out.println("滑动到了底部");
                         if (currentPage < totalPages && hasFootView){
                             currentPage++;
                             getLatestSongsList(currentPage);
@@ -151,8 +148,16 @@ public class SelecFromServerActivity extends AppCompatActivity {
             fileUri = data.getData();
             String path = fileUri.getPath();
             fileName = path.substring(path.lastIndexOf("/") + 1);
-            Sequence sequence = MidiSystem.getSequence(getContentResolver().openInputStream(fileUri));
-            final long midiDuration = sequence.getMicrosecondLength()/1000;
+            ArrayList<Note> noteList = MidiProcessor.toNoteList(getContentResolver().openInputStream(fileUri));
+            long midiDuration = 0;
+            for (int i = noteList.size() - 1; i > 0; i--) {
+                if (noteList.get(i).isNoteOn()){
+                    midiDuration = noteList.get(i).getTick();
+                    break;
+                }
+            }
+            System.out.println(midiDuration);
+                    //sequence.getMicrosecondLength()/1000;
 
             View view = View.inflate(SelecFromServerActivity.this, R.layout.upload_dialog, null);
             final EditText upload_name = view.findViewById(R.id.upload_name);
@@ -178,6 +183,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
                             dialog.dismiss();
                         }
                     }).show();
+            final long finalMidiDuration = midiDuration;
             alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -187,9 +193,9 @@ public class SelecFromServerActivity extends AppCompatActivity {
                             .putString("delete_password", delete_passowrd.getText().toString())
                             .commit();
                     if (upload_name.getText().length() == 0) {
-                        upload_name.setError("名称不能为空！");
+                        upload_name.setError(getString(R.string.mingchengbunengweikong));
                     } else if (upload_name.getText().length() > 100) {
-                        upload_name.setError("名称不能大于100个字符！");
+                        upload_name.setError(getString(R.string.mcbndy100gzf));
                     } else {
                         byte[] fileData = null;
                         try {
@@ -207,7 +213,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
                                     .addFormDataPart("delete_password", delete_passowrd.getText().toString())
                                     .addFormDataPart("hash", MD5.getMD5Three(fileData))
                                     .addFormDataPart("file_size",fileSize+"")
-                                    .addFormDataPart("duration",midiDuration+"")
+                                    .addFormDataPart("duration", finalMidiDuration +"")
                                     .addFormDataPart("file", upload_name.getText().toString(), requestBody)
                                     .build();
                             OkHttpClient okHttpClient = HttpUtil.getClient();
@@ -216,7 +222,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
                                     .url("http://" + SERVER_ADDRESS + "/upload")
                                     .build();
                             alertDialog.dismiss();
-                            final ProgressDialog progressDialog = new ProgressDialog(SelecFromServerActivity.this).show(SelecFromServerActivity.this, "上传中……", "", false, false);
+                            final ProgressDialog progressDialog = new ProgressDialog(SelecFromServerActivity.this).show(SelecFromServerActivity.this, getString(R.string.shangchuanzhong), "", false, false);
                             okHttpClient.newCall(request).enqueue(new Callback() {
                                 @Override
                                 public void onFailure(Call call, IOException e) {
@@ -243,7 +249,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
                                 }
                             });
                         } else {
-                            new AlertDialog.Builder(SelecFromServerActivity.this).setTitle("文件过大！").setMessage("最高可上传1MB文件").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            new AlertDialog.Builder(SelecFromServerActivity.this).setTitle(R.string.wenjianguoda).setMessage(R.string.zgksc1mbwj).setPositiveButton("确定", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
 
@@ -255,8 +261,10 @@ public class SelecFromServerActivity extends AppCompatActivity {
             });
         } catch (RuntimeException | FileNotFoundException e) {
             e.printStackTrace();
-        } catch (InvalidMidiDataException | IOException e) {
-            Toast.makeText(SelecFromServerActivity.this, "读取文件时遇到异常：" + e.getMessage() + "\n请选择正常能播放的MIDI文件！", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Toast.makeText(SelecFromServerActivity.this, getString(R.string.dqwjsydyc) + e.getMessage() + getString(R.string.qxzzcnbfdwj), Toast.LENGTH_LONG).show();
+        } catch (NotIsMidiFileException e) {
+            e.printStackTrace();
         }
     }
 
@@ -269,60 +277,44 @@ public class SelecFromServerActivity extends AppCompatActivity {
     private void setLatestSongsList() {
         currentPage = 1;
         hasFootView = true;
-        final ProgressDialog progressDialog = new ProgressDialog(SelecFromServerActivity.this).show(SelecFromServerActivity.this, "正在获取最新音乐……", "", false, false);
-        OkHttpClient client = HttpUtil.getClient();
-        Request request = new Request.Builder().url("http://" + SERVER_ADDRESS + "/latest_songs").build();
-        client.newCall(request).enqueue(new Callback() {
+        final ProgressDialog progressDialog = new ProgressDialog(SelecFromServerActivity.this).show(SelecFromServerActivity.this, getString(R.string.zzhqzxyy), "", false, false);
+        HttpUtil.GETJson("http://" + SERVER_ADDRESS + "/latest_songs", this, handler, new HttpUtil.Receive_WithDismiss() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void doDismiss(Exception e) {
                 progressDialog.dismiss();
-                networkError(e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                JSONObject jsonObject = JSON.parseObject(response.body().string());
+            public void success(JSONObject jsonObject) {
+                progressDialog.dismiss();
                 totalPages = jsonObject.getInteger("total_pages");
                 maxCount = jsonObject.getInteger("count");
                 JSONArray jsonArray = jsonObject.getJSONArray("midis");
-                Message message = new Message();
-                message.what = 2;
                 List<JSONObject> musicList = new ArrayList<>(jsonArray.size());
                 for (int i = 0; i < jsonArray.size(); i++) {
                     musicList.add(jsonArray.getJSONObject(i));
                 }
-                message.obj = musicList;
-                progressDialog.dismiss();
-                handler.sendMessage(message);
+                adapter = new MusicListAdapterForOnline(SelecFromServerActivity.this, hasFootView, musicList);
+                adapter.maxCount = maxCount;
+                music_list.setAdapter(adapter);
             }
         });
+
+
     }
 
     private void getLatestSongsList(int page) {
-        OkHttpClient client = HttpUtil.getClient();
-        Request request = new Request.Builder().url("http://" + SERVER_ADDRESS + "/latest_songs?page=" + page).build();
-        Call call = client.newCall(request);
-        call.enqueue(new Callback() {
+        HttpUtil.GETJson("http://" + SERVER_ADDRESS + "/latest_songs?page=" + page, this, handler, new HttpUtil.Receive() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                networkError(e);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                JSONObject jsonObject = JSON.parseObject(response.body().string());
+            public void success(JSONObject jsonObject) {
                 JSONArray jsonArray = jsonObject.getJSONArray("midis");
                 List<JSONObject> musicList = new ArrayList<>(jsonArray.size());
                 for (int i = 0; i < jsonArray.size(); i++) {
                     musicList.add(jsonArray.getJSONObject(i));
                 }
-                Message message = new Message();
-                message.what = 5;
-                message.obj = musicList;
-                handler.sendMessage(message);
+                adapter.addData(musicList);
             }
         });
-
     }
 
     private void search() {
@@ -337,36 +329,26 @@ public class SelecFromServerActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         final ProgressDialog progressDialog = new ProgressDialog(SelecFromServerActivity.this).show(SelecFromServerActivity.this, "搜索中……", "", false, false);
-
-                        OkHttpClient client = HttpUtil.getClient();
-                        Request request = new Request.Builder().url("http://" + SERVER_ADDRESS + "/search?name=" + text.getText()).build();
-                        client.newCall(request).enqueue(new Callback() {
+                        HttpUtil.GETJson("http://" + SERVER_ADDRESS + "/search?name=" + text.getText(), SelecFromServerActivity.this, handler, new HttpUtil.Receive_WithDismiss() {
                             @Override
-                            public void onFailure(Call call, IOException e) {
+                            public void doDismiss(Exception e) {
                                 progressDialog.dismiss();
-                                networkError(e);
                             }
 
                             @Override
-                            public void onResponse(Call call, Response response) throws IOException {
-                                Message message = new Message();
-                                message.what = 2;
-                                JSONObject jsonObject = JSON.parseObject(response.body().string());
+                            public void success(JSONObject jsonObject) {
                                 JSONArray jsonArray = jsonObject.getJSONArray("results");
                                 List<JSONObject> musicList = new ArrayList<>(jsonArray.size());
                                 for (int i = 0; i < jsonArray.size(); i++) {
                                     musicList.add(jsonArray.getJSONObject(i));
                                 }
-                                message.obj = musicList;
-                                handler.sendMessage(message);
                                 progressDialog.dismiss();
-                                message = new Message();
-                                message.what = 1;
-                                message.obj = jsonObject.getString("message");
-                                handler.sendMessage(message);
+                                adapter = new MusicListAdapterForOnline(SelecFromServerActivity.this, hasFootView, musicList);
+                                adapter.maxCount = maxCount;
+                                music_list.setAdapter(adapter);
+                                Toast.makeText(SelecFromServerActivity.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
                             }
                         });
-
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -398,7 +380,6 @@ public class SelecFromServerActivity extends AppCompatActivity {
         }
         handler.sendMessage(message);
     }
-
     public Handler handler = new Handler(Looper.myLooper()) {
         @Override
         public void handleMessage(@NonNull final Message msg) {

@@ -46,18 +46,16 @@
                         <TextView
                             android:layout_width="45sp"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="16sp"
                             android:background="#C7ABAA"
                             android:text="C1~B1"
                             android:textColor="@color/colorBlack" />
 
-                        <TextView
+                        <Spinner
+                            android:id="@+id/spinner1"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="8sp"
-                            android:layout_marginBottom="14sp"
-                            android:text="@string/row3"
-                            android:textColor="@color/colorBlack"
-                            android:textSize="16sp" />
+                            android:layout_height="wrap_content" />
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -69,18 +67,16 @@
                         <TextView
                             android:layout_width="45sp"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="16sp"
                             android:background="#f8b59b"
                             android:text="C2~B2"
                             android:textColor="@color/colorBlack" />
 
-                        <TextView
+                        <Spinner
+                            android:id="@+id/spinner2"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="8sp"
-                            android:layout_marginBottom="14sp"
-                            android:text="@string/row3"
-                            android:textColor="@color/colorBlack"
-                            android:textSize="16sp" />
+                            android:layout_height="wrap_content" />
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -174,18 +170,16 @@
                         <TextView
                             android:layout_width="45sp"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="16sp"
                             android:background="#ddb7dc"
                             android:text="C7~B7"
                             android:textColor="@color/colorBlack" />
 
-                        <TextView
+                        <Spinner
+                            android:id="@+id/spinner7"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="8sp"
-                            android:layout_marginBottom="14sp"
-                            android:text="@string/row1"
-                            android:textColor="@color/colorBlack"
-                            android:textSize="16sp" />
+                            android:layout_height="wrap_content" />
+
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

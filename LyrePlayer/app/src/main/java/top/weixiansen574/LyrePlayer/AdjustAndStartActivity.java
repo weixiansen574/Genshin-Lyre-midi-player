@@ -1,17 +1,13 @@
-// Decompiled by DJ v3.12.12.98 Copyright 2014 Atanas Neshkov  Date: 2021/10/26 18:33:21
-// Home Page:  http://www.neshkov.com/dj.html - Check often for new version!
-// Decompiler options: packimports(3)
-// Source File Name:   adjustAndStart.java
-//谢谢dj java 反编译拯救此代码
+
 package top.weixiansen574.LyrePlayer;
 
 import android.app.AlertDialog;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,55 +15,58 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.File;
-import java.io.FileInputStream;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.leff.midi.NotIsMidiFileException;
+
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Iterator;
 
-import jp.kshoji.javax.sound.midi.InvalidMidiDataException;
-import jp.kshoji.javax.sound.midi.MidiEvent;
-import jp.kshoji.javax.sound.midi.MidiSystem;
-import jp.kshoji.javax.sound.midi.Sequence;
-import jp.kshoji.javax.sound.midi.Track;
+import top.weixiansen574.LyrePlayer.enums.BlackKeySetting;
+import top.weixiansen574.LyrePlayer.midi.MidiProcessor;
 import top.weixiansen574.LyrePlayer.midi.Note;
+import top.weixiansen574.LyrePlayer.util.AccessibilityUtil;
+import top.weixiansen574.LyrePlayer.util.NoteListStorage;
 
 public class AdjustAndStartActivity extends AppCompatActivity implements View.OnClickListener {
+    Spinner spinner1;
+    Spinner spinner2;
     Spinner spinner3;
     Spinner spinner4;
     Spinner spinner5;
     Spinner spinner6;
+    Spinner spinner7;
     RadioGroup blackKeySettings;
     float speed = -1;
-    int tansposition = 11;
-    int currentTansposition = -1;
+    int transposition = 11;
+    int currentTransposition = -1;
     SharedPreferences midi_info;
     SharedPreferences keyCoordinates;
     SharedPreferences music_speed_list;
     static Uri midiUri;
     static String midiName;
+    FloatListManager floatListManager;
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         //工具栏返回上一级按钮
-        if (item.getItemId() == 16908332){
+        if (item.getItemId() == 16908332) {
             finish();
         }
         return true;
@@ -79,13 +78,13 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
             midiUri = data.getData();
             String path = midiUri.getPath();
             midiName = path.substring(path.lastIndexOf("/") + 1);
-            Toast.makeText(this, "" + getString(R.string.filename) + midiName, Toast.LENGTH_LONG).show();
-            if (!midiName.endsWith(".mid")){
+            Toast.makeText(this, "" + getString(R.string.filename) + midiName, Toast.LENGTH_SHORT).show();
+            if (!midiName.endsWith(".mid")) {
                 //检测文件名
                 new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(getString(R.string.file_mame_waning)).setMessage(getString(R.string.file_name_warning_message) + midiName + getString(R.string.file_name_warning_message1)).setPositiveButton(R.string.show_help, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        startActivity(new Intent(AdjustAndStartActivity.this,FileHelp.class));
+                        startActivity(new Intent(AdjustAndStartActivity.this, FileHelp.class));
                     }
                 }).setNeutralButton(R.string.got_it, new DialogInterface.OnClickListener() {
                     @Override
@@ -94,14 +93,14 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                     }
                 }).show();
             }
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             //如果没有选择到文件
             e.printStackTrace();
             new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.nmyxzwj).setMessage(R.string.nmyxzwj_msg).setPositiveButton(getString(R.string.show_help), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     finish();
-                    startActivity(new Intent(AdjustAndStartActivity.this,FileHelp.class));
+                    startActivity(new Intent(AdjustAndStartActivity.this, FileHelp.class));
                 }
             }).setNeutralButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
                 @Override
@@ -147,23 +146,30 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
             }
         }
         this.setContentView(R.layout.activity_adjust_and_start_new);
-        midi_info = getSharedPreferences("midi_info",Context.MODE_PRIVATE);
-        music_speed_list = getSharedPreferences("music_speed_list",Context.MODE_PRIVATE);
-        keyCoordinates = getSharedPreferences("key_coordinates",Context.MODE_PRIVATE);
+        midi_info = getSharedPreferences("midi_info", Context.MODE_PRIVATE);
+        music_speed_list = getSharedPreferences("music_speed_list", Context.MODE_PRIVATE);
+        keyCoordinates = getSharedPreferences("key_coordinates", Context.MODE_PRIVATE);
+        floatListManager = new FloatListManager(AdjustAndStartActivity.this);
 
         TextView textView = (TextView) findViewById(R.id.textView);
         Button start = (Button) findViewById(R.id.start);
         start.setOnClickListener(this);
         final TextView tanspositionText = findViewById(R.id.tansposition_text);
 
-        spinner3 = (Spinner)this.findViewById(R.id.spinner3);
-        spinner4 = (Spinner)this.findViewById(R.id.spinner4);
-        spinner5 = (Spinner)this.findViewById(R.id.spinner5);
-        spinner6 = (Spinner)this.findViewById(R.id.spinner6);
+        spinner1 = (Spinner) this.findViewById(R.id.spinner1);
+        spinner2 = (Spinner) this.findViewById(R.id.spinner2);
+        spinner3 = (Spinner) this.findViewById(R.id.spinner3);
+        spinner4 = (Spinner) this.findViewById(R.id.spinner4);
+        spinner5 = (Spinner) this.findViewById(R.id.spinner5);
+        spinner6 = (Spinner) this.findViewById(R.id.spinner6);
+        spinner7 = (Spinner) this.findViewById(R.id.spinner7);
+        this.setSpinner(spinner1, R.array.spinner1_array, 0);
+        this.setSpinner(spinner2, R.array.spinner2_array, 0);
         this.setSpinner(spinner3, R.array.spinner3_array, 0);
         this.setSpinner(spinner4, R.array.spinner4_array, 1);
         this.setSpinner(spinner5, R.array.spinner5_array, 2);
         this.setSpinner(spinner6, R.array.spinner6_array, 1);
+        this.setSpinner(spinner7, R.array.spinner7_array, 0);
         blackKeySettings = (RadioGroup) findViewById(R.id.black_key_settings);
         final EditText x1 = findViewById(R.id.x1);
         final EditText x2 = findViewById(R.id.x2);
@@ -176,18 +182,45 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
         final EditText y2 = findViewById(R.id.y2);
         final EditText y3 = findViewById(R.id.y3);
 
-        if(keyCoordinates.contains("x1")){
-            x1.setText(keyCoordinates.getInt("x1",0) + "");
-            x2.setText(keyCoordinates.getInt("x2",0) + "");
-            x3.setText(keyCoordinates.getInt("x3",0) + "");
-            x4.setText(keyCoordinates.getInt("x4",0) + "");
-            x5.setText(keyCoordinates.getInt("x5",0) + "");
-            x6.setText(keyCoordinates.getInt("x6",0) + "");
-            x7.setText(keyCoordinates.getInt("x7",0) + "");
-            y1.setText(keyCoordinates.getInt("y1",0) + "");
-            y2.setText(keyCoordinates.getInt("y2",0) + "");
-            y3.setText(keyCoordinates.getInt("y3",0) + "");
+        if (keyCoordinates.contains("x1")) {
+            x1.setText(keyCoordinates.getInt("x1", 0) + "");
+            x2.setText(keyCoordinates.getInt("x2", 0) + "");
+            x3.setText(keyCoordinates.getInt("x3", 0) + "");
+            x4.setText(keyCoordinates.getInt("x4", 0) + "");
+            x5.setText(keyCoordinates.getInt("x5", 0) + "");
+            x6.setText(keyCoordinates.getInt("x6", 0) + "");
+            x7.setText(keyCoordinates.getInt("x7", 0) + "");
+            y1.setText(keyCoordinates.getInt("y1", 0) + "");
+            y2.setText(keyCoordinates.getInt("y2", 0) + "");
+            y3.setText(keyCoordinates.getInt("y3", 0) + "");
+        } else {
+            //自动填写坐标，根据屏幕分辨率
+            try {
+                InputStream inputStream = getResources().getAssets().open("ResolutionCoordinateMapping.json");
+                byte[] buffer = new byte[inputStream.available()];
+                inputStream.read(buffer,0,inputStream.available());
+                String JSONString = new String(buffer);
+                JSONObject coordinateMappingJSON = JSON.parseObject(JSONString);
+                String resolution = getResolution();
+                if (coordinateMappingJSON.containsKey(resolution)) {
+                    Toast.makeText(this,"已根据您的屏幕分辨率：" + resolution + "自动填写坐标！（需自行保存）",Toast.LENGTH_LONG).show();
+                    JSONObject coordinatesJSON = coordinateMappingJSON.getJSONObject(resolution);
+                    x1.setText(coordinatesJSON.getString("x1"));
+                    x2.setText(coordinatesJSON.getString("x2"));
+                    x3.setText(coordinatesJSON.getString("x3"));
+                    x4.setText(coordinatesJSON.getString("x4"));
+                    x5.setText(coordinatesJSON.getString("x5"));
+                    x6.setText(coordinatesJSON.getString("x6"));
+                    x7.setText(coordinatesJSON.getString("x7"));
+                    y1.setText(coordinatesJSON.getString("y1"));
+                    y2.setText(coordinatesJSON.getString("y2"));
+                    y3.setText(coordinatesJSON.getString("y3"));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
 
 
         Button startSettings = findViewById(R.id.launch_setting);
@@ -213,8 +246,8 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                             putInt("y1", Integer.parseInt(y1.getText().toString())).
                             putInt("y2", Integer.parseInt(y2.getText().toString())).
                             putInt("y3", Integer.parseInt(y3.getText().toString())).commit();
-                    Toast.makeText(AdjustAndStartActivity.this, R.string.saved_successfully,Toast.LENGTH_LONG).show();
-                }catch (NumberFormatException e){
+                    Toast.makeText(AdjustAndStartActivity.this, R.string.saved_successfully, Toast.LENGTH_LONG).show();
+                } catch (NumberFormatException e) {
                     e.printStackTrace();
                     new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.save_failed).setMessage(R.string.save_failed_msg).setPositiveButton(R.string.got_it, new DialogInterface.OnClickListener() {
                         @Override
@@ -233,16 +266,16 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
             public void onClick(View view) {
                 final ProgressDialog analyzing = new ProgressDialog(AdjustAndStartActivity.this).show(AdjustAndStartActivity.this, getString(R.string.analyzing), getString(R.string.analyzing_msg), false, true);
                 analyzing.show();
-                final String[] tanspositionString = {"+11","+10","+9","+8","+7", "+6", "+5", "+4", "+3", "+2", "+1", "0", "-1", "-2", "-3", "-4", "-5", "-6", "-7","-8","-9","-10","-11"};
+                final String[] tanspositionString = {"+11", "+10", "+9", "+8", "+7", "+6", "+5", "+4", "+3", "+2", "+1", "0", "-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10", "-11"};
 
                 final Handler hand = new Handler(Looper.myLooper()) {
                     public void handleMessage(Message msg) {
                         analyzing.dismiss();
                         if (msg.what == 1) {
-                            new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.please_select_an_offset).setSingleChoiceItems(tanspositionString, tansposition , new DialogInterface.OnClickListener() {
+                            new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.please_select_an_offset).setSingleChoiceItems(tanspositionString, transposition, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                    currentTansposition = i;
+                                    currentTransposition = i;
                                 }
 
                             }).setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -252,19 +285,19 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                             }).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                    if (currentTansposition == -1){
-                                        tansposition = 11;
-                                    }else{
-                                        tansposition = currentTansposition;
+                                    if (currentTransposition == -1) {
+                                        transposition = 11;
+                                    } else {
+                                        transposition = currentTransposition;
                                     }
-                                    tanspositionText.setText(getString(R.string.note_transposition) + ((11 - tansposition) > 0 ? "+":"") + (11 - tansposition));
+                                    tanspositionText.setText(getString(R.string.note_transposition) + ((11 - transposition) > 0 ? "+" : "") + (11 - transposition));
                                 }
                             }).show();
-                        }else if(msg.what == 0){
+                        } else if (msg.what == 0) {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.file_data_is_corrupted).setMessage(getString(R.string.file_data_is_corrupted_msg) + fileHead4Byte() + "正常为：4d 54 68 64").setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.file_data_is_corrupted).setMessage(getString(R.string.tshbsyxdmidiwj) + fileHead4Byte() + "正常为：4d 54 68 64").setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             finish();
                                         }
@@ -276,86 +309,23 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                         }
                     }
                 };
-
-                new Thread(new Runnable() {
+                Thread analyzeBlackKeyThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            Sequence midi = MidiSystem.getSequence(getContentResolver().openInputStream(midiUri));
-                            ArrayList<Note> noteList = new ArrayList<>();
-                            Track[] midiTracks = midi.getTracks();
-                            for (int t = 0; t < midiTracks.length; t++) {
-                                for (int i = 0; i < midiTracks[t].size(); ++i) {
-                                    MidiEvent midiEvent = midiTracks[t].get(i);
-                                    byte[] midiMessage = midiEvent.getMessage().getMessage();
-                                    if (midiMessage.length == 3) {
-                                        if (midiMessage[0] >= -112 && midiMessage[0] <= -97) {
-                                            if (midiMessage[2] != 0) {
-                                                //类型：音符按下
-                                                noteList.add(new Note(midiEvent.getTick(), midiMessage[1], true));
-                                            } else {
-                                                //类型：音符松开
-                                                noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
-                                            }
-                                        } else if (midiMessage[0] >= -128 && midiMessage[0] <= -113) {
-                                           //类型：音符松开
-                                            noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
-                                        }
-                                    }
-                                    Collections.sort(noteList);
-                                }
-                            }
-                            //分析黑键数
+                        ArrayList<Note> noteArrayList = MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this,getContentResolver(),midiUri);
+                        if (noteArrayList != null){
                             for (int i = 0; i < tanspositionString.length; i++) {
-                                int blackKeyQuantity = 0;
-                                for(Note note:noteList){
-                                    if(Note.isBlackKey(note.getNote() + (11 - i))){
-                                        blackKeyQuantity++;
-                                    }
-                                }
+                                int blackKeyQuantity = MidiProcessor.analyzeBlackKeyQuantity(noteArrayList,(11 - i));
                                 tanspositionString[i] += ("  " + getString(R.string.black_quantity) + (blackKeyQuantity / 2));
                             }
                             hand.sendEmptyMessage(1);
-
-                        } catch (final InvalidMidiDataException e) {
-                            e.printStackTrace();
-                            final String s = e.toString();
-                            if (e.getMessage() != "Invalid header") {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.error_reading_MIDI).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                finish();
-                                            }
-                                        });
-                                        alertDialog.setCancelable(false);
-                                        alertDialog.show();
-                                    }
-                                });
-                            }else {
-                                hand.sendEmptyMessage(0);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            final String s = e.toString();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.exception_details).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            finish();
-                                        }
-                                    });
-                                    alertDialog.setCancelable(false);
-                                    alertDialog.show();
-                                }
-                            });
                         }
                     }
-                }).start();
-
+                });
+                analyzeBlackKeyThread.setName("analyzeBlackKey");
+                analyzeBlackKeyThread.start();
             }
+
         });
         //保存到列表
         Button save_to_list = findViewById(R.id.save_to_list);
@@ -364,7 +334,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
             public void onClick(View v) {
                 View view = View.inflate(AdjustAndStartActivity.this, R.layout.edit_text, null);
                 final EditText text = view.findViewById(R.id.edit_text);
-                text.setText(midiName.replace(".mid",""));
+                text.setText(midiName.replace(".mid", ""));
                 new AlertDialog.Builder(AdjustAndStartActivity.this)
                         .setTitle("请输入你要保存的名字")
                         .setView(view)
@@ -373,8 +343,30 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 // 获取输入框的内容
-                                processAndSave(text.getText().toString());
-                                Toast.makeText(AdjustAndStartActivity.this, text.getText().toString() + "  已保存到播放列表", Toast.LENGTH_SHORT).show();
+                                Thread processMidiThread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ArrayList<Note> noteList = MidiProcessor.toLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this,getContentResolver(),midiUri), transposition,getSpinnerSettings(),getBlackKeySettings());
+                                        if (floatListManager.insertMusic(text.getText().toString(),noteList)) {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Toast.makeText(AdjustAndStartActivity.this, text.getText().toString() + "  已保存到播放列表", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                        } else {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Toast.makeText(AdjustAndStartActivity.this, text.getText().toString() + "  保存失败", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                        }
+
+                                    }
+                                });
+                                processMidiThread.setName("processMidi");
+                                processMidiThread.start();
                             }
                         })
                         .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -384,6 +376,23 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                                 dialog.dismiss();
                             }
                         }).show();
+            }
+        });
+        //调试代码，记得删
+        save_to_list.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                try {
+                    Iterator iterator = MidiProcessor.toLyreNoteList(MidiProcessor.toNoteList(getContentResolver().openInputStream(midiUri)),0,new int[]{1,1,1,2,3,3,3}, BlackKeySetting.left).iterator();
+                    while (iterator.hasNext()){
+                        System.out.println(iterator.next());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (NotIsMidiFileException e) {
+                    e.printStackTrace();
+                }
+                return false;
             }
         });
 
@@ -401,48 +410,54 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
     //处理midi&打开悬浮窗
     @Override
     public void onClick(View view) {
-        if(!keyCoordinates.contains("x1")){
+        if (!keyCoordinates.contains("x1")) {
             new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.Error_coordinates_are_empty).setMessage(R.string.Error_coordinates_are_empty_msg).setPositiveButton(R.string.got_it, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
 
                 }
             }).show();
-    }else{
-        //判断是否有悬浮窗权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            new AlertDialog.Builder(this).setTitle(R.string.floating_window_permission_is_required).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
-                    startActivityForResult(intent, 100);
-                }
-            }).show();
         } else {
-            //已经有权限，可以直接显示悬浮窗
-            //判断是否有无障碍权限
-            if (!ClickService.isStart()) {
-                new AlertDialog.Builder(this).setTitle(R.string.Accessibility_required).setMessage(R.string.Accessibility_required_msg).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            //判断是否有悬浮窗权限
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                new AlertDialog.Builder(this).setTitle(R.string.floating_window_permission_is_required).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        try {
-                            AdjustAndStartActivity.this.startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
-                        } catch (Exception e) {
-                            AdjustAndStartActivity.this.startActivity(new Intent(Settings.ACTION_SETTINGS));
-                            e.printStackTrace();
-                        }
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                        intent.setData(Uri.parse("package:" + getPackageName()));
+                        startActivityForResult(intent, 100);
                     }
                 }).show();
             } else {
-                midi_info.edit().putBoolean("isMusicList",false).commit();
-                processAndSave("lyreNotes");
+                //已经有权限，可以直接显示悬浮窗
+                //判断是否有无障碍权限
+                if (AccessibilityUtil.checkPermission(AdjustAndStartActivity.this)) {
+                    midi_info.edit().putBoolean("isMusicList", false).commit();
+                    Thread processMidiThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                                final ArrayList<Note> sequenceOfNotes = MidiProcessor.toLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this,getContentResolver(),midiUri), transposition,getSpinnerSettings(),getBlackKeySettings());
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Intent intent = new Intent(AdjustAndStartActivity.this, FloatingButtonService.class);
+                                        intent.putExtra("name",midiName);
+                                        intent.putExtra("noteListKey",NoteListStorage.putNoteList(sequenceOfNotes));
+                                        startService(intent);
+                                    }
+                                });
+
+                        }
+                    });
+                    processMidiThread.setName("processMidi");
+                    processMidiThread.start();
+                    //processAndSave("lyreNotes");
+                }
             }
-
-
         }
     }
-    }
-    public String fileHead4Byte(){
+
+    public String fileHead4Byte() {
         String _4byte = "";
         try {
             InputStream inputStream = getContentResolver().openInputStream(midiUri);
@@ -458,260 +473,90 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
         return "";
     }
 
+    public int[] getSpinnerSettings(){
+        int[] settings = new int[7];//{1,1,1,2,3,3,3};
+        if (spinner1.getSelectedItemPosition() == 0){
+            settings[0] = 1;
+        } else if (spinner1.getSelectedItemPosition() == 1){
+            settings[0] = -1;
+        }
+        if (spinner2.getSelectedItemPosition() == 0){
+            settings[1] = 1;
+        } else if (spinner2.getSelectedItemPosition() == 1){
+            settings[1] = -1;
+        }
+        if (spinner3.getSelectedItemPosition() == 0){
+            settings[2] = 1;
+        } else if (spinner3.getSelectedItemPosition() == 1){
+            settings[2] = 2;
+        }
 
-    public void processAndSave(final String saveName){
-        final ProgressDialog loading = new ProgressDialog(AdjustAndStartActivity.this).show(AdjustAndStartActivity.this, getString(R.string.Processing_MIDI_data), getString(R.string.Processing_MIDI_data_msg), false, true);
-        loading.show();
-        final Handler hand = new Handler(Looper.myLooper()) {
-            @Override
-            public void handleMessage(Message msg) {
-                loading.dismiss();
-                if (msg.what == 1) {
-                    Intent intent = new Intent(AdjustAndStartActivity.this, FloatingButtonService.class);
-                    startService(intent);
-                } else if (msg.what == 0) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.file_data_is_corrupted).setMessage(getString(R.string.file_data_is_corrupted_msg) + fileHead4Byte() + "正常为：4d 54 68 64").setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    finish();
-                                }
-                            });
-                            alertDialog.setCancelable(false);
-                            alertDialog.show();
-                        }
-                    });
-                }
-            }
-        };
-        //根据设定值处理midi数据
-        new Thread(new Runnable() {
+        if (spinner4.getSelectedItemPosition() == 0) {
+            settings[3] = 1;
+        } else if (spinner4.getSelectedItemPosition() == 1){
+            settings[3] = 2;
+        } else if (spinner4.getSelectedItemPosition() == 2){
+            settings[3] = 3;
+        }
+
+        if (spinner5.getSelectedItemPosition() == 0) {
+            settings[4] = 1;
+        } else if (spinner5.getSelectedItemPosition() == 1){
+            settings[4] = 2;
+        } else if (spinner5.getSelectedItemPosition() == 2){
+            settings[4] = 3;
+        }
+
+        if (spinner6.getSelectedItemPosition() == 0) {
+            settings[5] = 2;
+        } else if (spinner6.getSelectedItemPosition() == 1){
+            settings[5] = 3;
+        } else if (spinner6.getSelectedItemPosition() == 2){
+            settings[5] = -1;
+        }
+        if (spinner7.getSelectedItemPosition() == 0){
+            settings[6] = 1;
+        } else if (spinner7.getSelectedItemPosition() == 1){
+            settings[6] = -1;
+        }
+        return settings;
+    }
+
+    private BlackKeySetting getBlackKeySettings() {
+        switch (blackKeySettings.getCheckedRadioButtonId()) {
+            case R.id.cb1:
+                return BlackKeySetting.leftAndRight;
+            case R.id.cb2:
+                return BlackKeySetting.left;
+            case R.id.cb3:
+                return BlackKeySetting.right;
+            case R.id.cb4:
+                return BlackKeySetting.no;
+        }
+        return BlackKeySetting.no;
+    }
+
+    private void dialog(final String title, final String message){
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                try {
-
-                    StringBuffer text = new StringBuffer();
-                    StringBuffer text2 = new StringBuffer();
-                    Sequence midi;
-                    ArrayList<Note> noteList = new ArrayList<>();
-                    midi = MidiSystem.getSequence(getContentResolver().openInputStream(midiUri));
-                    Track[] midiTracks = midi.getTracks();
-                    final String midiTracksLength = midiTracks.length + "";
-                    for (int t = 0; t < midiTracks.length; t++) {
-                        for (int i = 0; i < midiTracks[t].size(); ++i) {
-                            byte[] midiMessage;
-                            MidiEvent midiEvent = midiTracks[t].get(i);
-                            text.append("tick:" + midiEvent.getTick() + " data:");
-                            for (byte b : midiMessage = midiEvent.getMessage().getMessage()) {
-                                text.append(Integer.toHexString(b & 0xFF) + " ");
-                            }
-                            if (midiMessage.length == 3) {
-                                if (midiMessage[0] >= -112 && midiMessage[0] <= -97) {
-                                    //这行判断代码迫于无奈，测试读取midi文件时发现某个midi文件全部只有音符按下没有松开，得重新判断
-                                    if (midiMessage[2] != 0) {
-                                        text.append("类型：音符按下");
-                                        noteList.add(new Note(midiEvent.getTick(), midiMessage[1], true));
-                                    } else {
-                                        text.append("类型：音符松开");
-                                        noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
-                                    }
-
-                                } else if (midiMessage[0] >= -128 && midiMessage[0] <= -113) {
-                                    text.append("类型：音符松开");
-                                    noteList.add(new Note(midiEvent.getTick(), midiMessage[1], false));
-                                }
-                            }
-                            //当遇到BPM事件时，设置整首歌的BPM，但不支持动态改变，故仅读一次BPM值,然后再此序列的时序分辨率。
-                            if (speed == -1 && midiMessage.length == 6 && midiMessage[0] == -1 && midiMessage[1] == 81 && midiMessage[2] == 3) {
-                                speed = (500 / (float) midi.getResolution()) * (120 / (60000000 / (float) (((midiMessage[3] & 0xFF) * 256 * 256) + ((midiMessage[4] & 0xFF) * 256) + (midiMessage[5] & 0xFF))));
-                                //判断是想要直接打开悬浮窗还是保存到悬浮列表里（速度）
-                                if(saveName.equals("lyreNotes")) {
-                                    midi_info.edit().putFloat("speed", speed).putString("midi_name",midiName).commit();
-                                }else{
-                                    music_speed_list.edit().putFloat(saveName,speed).commit();
-                                }
-                            }
-                            text.append("\n");
-                        }
-                        text.append("==============\n");
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(title).setMessage(message).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialogInterface, int i) {
                     }
-                    //合并音轨并排序音符
-                    Collections.sort(noteList);
-                    //遍历音符列表,并按照调好的配置写入lyreNotes（原神琴音符[21~1]）
-
-                    ArrayList<Note> lyreNotes = new ArrayList<>();
-                    for (Note note : noteList) {
-                        if (note.type()) {
-                            text2.append(note.toString() + "\n");
-                            //88键 ======> 36键 ========> 21键
-                            int note_36 = to36Key(note.getNote() + (11 - tansposition));
-                            int[] lyreKeys = toLyreKey(note_36);
-                            if (lyreKeys != null) {
-                                for (int lyreKey : lyreKeys) {
-                                    lyreNotes.add(new Note(note.getTick(), (byte) lyreKey, note.type()));
-                                }
-                            }
-                        }
-                    }
-                    System.out.println(text);
-                    //将处理好的音符存盘,如果没有要求保存到列悬浮表里就放缓存目录
-                    File lyreNotesFile = null;
-                    if(saveName.equals("lyreNotes")) {
-                        lyreNotesFile = getCacheDir();
-                        lyreNotesFile = new File(lyreNotesFile, "lyreNotes");
-                        midi_info.edit().putString("midi_name",midiName).commit();
-                    }else{
-                        lyreNotesFile = getFilesDir();
-                        lyreNotesFile = new File(lyreNotesFile, "music_list");
-                        if(!lyreNotesFile.exists()){
-                            lyreNotesFile.mkdir();
-                        }
-                        lyreNotesFile = new File(lyreNotesFile,saveName);
-                        midi_info.edit().putString("midi_name",saveName).commit();
-                    }
-                    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(lyreNotesFile));
-                    oos.writeObject(lyreNotes);
-                    oos.flush();
-                    oos.close();
-                    if(saveName.equals("lyreNotes")) {
-                        hand.sendEmptyMessage(1);
-                    }else {
-                        hand.sendEmptyMessage(2);
-                    }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle("文件未找到").setMessage("返回URI类型不规范！请勿使用第三方（包括厂商系统的）文件管理器选择文件！错误的URI：").setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    finish();
-                                }
-                            });
-                            alertDialog.setCancelable(false);
-                            alertDialog.show();
-                        }
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    final String s = e.toString();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.exception_details).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    finish();
-                                }
-                            });
-                            alertDialog.setCancelable(false);
-                            alertDialog.show();
-                        }
-                    });
-                } catch (final InvalidMidiDataException e) {
-                    e.printStackTrace();
-                    final String s = e.toString();
-                    if (e.getMessage() != "Invalid header") {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                AlertDialog.Builder alertDialog = new AlertDialog.Builder(AdjustAndStartActivity.this).setTitle(R.string.error_reading_MIDI).setMessage(s).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        finish();
-                                    }
-                                });
-                                alertDialog.setCancelable(false);
-                                alertDialog.show();
-                            }
-                        });
-                    }else {
-                        hand.sendEmptyMessage(0);
-                    }
-
-                }
+                });
+                alertDialog.show();
             }
-
-        }).start();
-    }
-    //按照钢琴按键对应原神键位的范围的设定，将钢琴88个音符压缩成12*3=36个音符，但还包含半音
-    public int to36Key(int noteNum){
-        noteNum -= 47;
-        if (noteNum <= -24) {
-            return 1;
-        } else if (noteNum >= -23 && noteNum <= -12) {
-            return noteNum + 24;
-        } else if (noteNum >= -11 && noteNum <= 0) {
-            return noteNum + 12;
-        } else if (noteNum >= 1 && noteNum <= 12) {
-            if (spinner3.getSelectedItemPosition() == 0) {
-                return noteNum;
-            } else {
-                return noteNum + 12;
-            }
-        } else if (noteNum >= 13 && noteNum <= 24) {
-            if (spinner4.getSelectedItemPosition() == 0) {
-                return noteNum - 12;
-            } else if (spinner4.getSelectedItemPosition() == 1) {
-                return noteNum;
-            } else {
-                return noteNum + 12;
-            }
-        } else if (noteNum >= 25 && noteNum <= 36) {
-            if (spinner5.getSelectedItemPosition() == 0) {
-                return noteNum - 24;
-            } else if (spinner5.getSelectedItemPosition() == 1) {
-                return noteNum - 12;
-            } else {
-                return noteNum;
-            }
-        } else if (noteNum >= 37 && noteNum <= 48) {
-            if (spinner6.getSelectedItemPosition() == 0) {
-                return noteNum - 24;
-            } else {
-                return noteNum - 12;
-            }
-        } else if (noteNum >= 49 && noteNum <= 60) {
-            return noteNum - 24;
-        }
-        return -1;
-    }
-    //根据黑键的设定，36键进一步压缩成21键，21键即原神琴的键数
-    public int[] toLyreKey(int noteNum){
-        int magnification = 0;
-        int noteNum_12 = 1;
-        if (noteNum <= 12){ magnification = 0;noteNum_12 = noteNum;}
-        else if(noteNum >= 13 && noteNum <= 24){magnification = 1;noteNum_12 = noteNum - 12;}
-        else if(noteNum >= 25 && noteNum <= 36){magnification = 2;noteNum_12 = noteNum - 24;}
-
-        if     (noteNum_12 == 1){return new int[]{1 + (7 * magnification)};}
-        else if(noteNum_12 == 2){return blackKey(1,magnification);}
-        else if(noteNum_12 == 3){return new int[]{2 + (7 * magnification)};}
-        else if(noteNum_12 == 4){return blackKey(2,magnification);}
-        else if(noteNum_12 == 5){return new int[]{3 + (7 * magnification)};}
-        else if(noteNum_12 == 6){return new int[]{4 + (7 * magnification)};}
-        else if(noteNum_12 == 7){return blackKey(4,magnification);}
-        else if(noteNum_12 == 8){return new int[]{5 + (7 * magnification)};}
-        else if(noteNum_12 == 9){return blackKey(5,magnification);}
-        else if(noteNum_12 ==10){return new int[]{6 + (7 * magnification)};}
-        else if(noteNum_12 ==11){return blackKey(6,magnification);}
-        else if(noteNum_12 ==12){return new int[]{7 + (7 * magnification)};}
-        return null;
-    }
-    //按照黑键的设定，按照黑键左边的白键为索引
-    private int[] blackKey(int noteNum_7,int magnification){
-        switch (blackKeySettings.getCheckedRadioButtonId()){
-            case R.id.cb1:
-                return new int[]{noteNum_7 + (7 * magnification),(noteNum_7 + 1) + (7 * magnification)};
-            case R.id.cb2:
-                return new int[]{noteNum_7 + (7 * magnification)};
-            case R.id.cb3:
-                return new int[]{(noteNum_7 + 1) + (7 * magnification)};
-            case R.id.cb4:
-                return null;
-        }
-        return null;
+        });
     }
 
-
+    public String getResolution(){
+        WindowManager windowManager = getWindow().getWindowManager();
+        Point point = new Point();
+        windowManager.getDefaultDisplay().getRealSize(point);
+        int width = point.x;
+        int height = point.y;
+        return height + "*" + width;
     }
+
+}
 

@@ -28,16 +28,12 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
 import top.weixiansen574.LyrePlayer.midi.Note;
+import top.weixiansen574.LyrePlayer.util.NoteListStorage;
 
 
 public class FloatingButtonService extends Service {
@@ -45,15 +41,12 @@ public class FloatingButtonService extends Service {
     boolean isRun = false;
     boolean isPause = false;
     long currentTime_ms = 0;
-    File musicFile;
+    ArrayList<Note> noteList;
 
     SharedPreferences keyCoordinates;
-    SharedPreferences midi_info;
-    SharedPreferences music_speed_list;
-
     private WindowManager windowManager;
     private WindowManager.LayoutParams layoutParams;
-
+    FloatListManager floatListManager;
     private Button stop;
     private Button start;
     private Button list;
@@ -61,18 +54,30 @@ public class FloatingButtonService extends Service {
     private TextView currentTime;
     private ProgressBar progressBar;
     private TextView totalTime;
+    private String name;
 
     private Button close;
 
     Thread playing;
     Thread timer;
 
-    float speed;
+    float speed = 1;
+
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        showFloatingWindow();
+        name = intent.getStringExtra("name");
+        midiName.setText(name);
+        noteList = NoteListStorage.getNoteList(intent.getLongExtra("noteListKey",0));
+        return super.onStartCommand(intent, flags, startId);
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
         isStarted = true;
+        floatListManager = new FloatListManager(this);
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         layoutParams = new WindowManager.LayoutParams();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -87,7 +92,6 @@ public class FloatingButtonService extends Service {
         layoutParams.height = 280;
         layoutParams.x = 30;
         layoutParams.y = 100;
-
     }
 
     @Nullable
@@ -96,92 +100,66 @@ public class FloatingButtonService extends Service {
         return null;
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        showFloatingWindow();
-        return super.onStartCommand(intent, flags, startId);
-    }
-
     private void showFloatingWindow() {
         if (Settings.canDrawOverlays(this)) {
-            //读取之前的midi信息
-            midi_info = getSharedPreferences("midi_info", Context.MODE_PRIVATE);
-            music_speed_list = getSharedPreferences("music_speed_list", Context.MODE_PRIVATE);
-            if(midi_info.getBoolean("isMusicList",false)){
-                String musicName = midi_info.getString("midi_name","null");
-                File[] musicFiles = new File(getFilesDir(), "music_list").listFiles();
-                for(File musicFile_ : musicFiles){
-                    if (musicFile_.getName().equals(musicName)){
-                        musicFile = musicFile_;
-                        break;
-                    }
-                }
-                speed = music_speed_list.getFloat(musicName,1);
-                System.out.println(musicName);
-            }else {
-                speed = midi_info.getFloat("speed", 1);
-                musicFile = new File(getCacheDir(), "lyreNotes");
-            }
             //从xml布局文件中读取布局
             final View view = View.inflate(this, R.layout.float_layout, null);
             windowManager.addView(view, layoutParams);
             midiName = view.findViewById(R.id.midi_name);
-            midiName.setText(midi_info.getString("midi_name","错误"));
             currentTime = view.findViewById(R.id.current_time);
             progressBar = view.findViewById(R.id.progressBar);
             totalTime = view.findViewById(R.id.total_time);
-            final Handler currentTimeHand = new Handler(Looper.myLooper()){
-              @Override
-              public void handleMessage(Message msg) {
-                  currentTime.setText(new SimpleDateFormat("mm:ss").format(new Date(msg.what)));
-              }
+            final Handler currentTimeHand = new Handler(Looper.myLooper()) {
+                @Override
+                public void handleMessage(Message msg) {
+                    currentTime.setText(new SimpleDateFormat("mm:ss").format(new Date(msg.what)));
+                }
             };
 
-            final Handler progressBarHand = new Handler(Looper.myLooper()){
+            final Handler progressBarHand = new Handler(Looper.myLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
                     progressBar.setProgress(msg.what);
                 }
             };
-            final Handler totalTimeHand = new Handler(Looper.myLooper()){
+            final Handler totalTimeHand = new Handler(Looper.myLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
                     totalTime.setText(new SimpleDateFormat("mm:ss").format(new Date(msg.what)));
                 }
             };
-            final Handler toastHand = new Handler(Looper.myLooper()){
+            final Handler toastHand = new Handler(Looper.myLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
                     switch (msg.what) {
-                        case 0 :
+                        case 0:
                             Toast.makeText(FloatingButtonService.this, getString(R.string.End_of_performance), Toast.LENGTH_LONG).show();
                             break;
                     }
                 }
             };
             //初始化播放器
-            resetPlaying(currentTimeHand,progressBarHand,totalTimeHand,toastHand);
+            resetPlaying(currentTimeHand, progressBarHand, totalTimeHand, toastHand);
             //从加载出的布局中找出按钮，并设置监听器
             start = view.findViewById(R.id.float_start);
-            midiName = view.findViewById(R.id.midi_name);
             view.setOnTouchListener(new FloatingOnTouchListener());
             start.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(!isRun) {
+                    if (!isRun) {
                         isRun = true;
                         start.setText("  ▎▎");
-                        resetPlaying(currentTimeHand,progressBarHand,totalTimeHand,toastHand);
+                        resetPlaying(currentTimeHand, progressBarHand, totalTimeHand, toastHand);
                         playing.start();
-                    }else if(!isPause){
+                    } else if (!isPause) {
                         isPause = true;
                         start.setText("▶");
-                        Toast.makeText(FloatingButtonService.this, getString(R.string.yzt),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(FloatingButtonService.this, getString(R.string.yzt), Toast.LENGTH_SHORT).show();
                         //Toast.makeText(FloatingButtonService.this, getString(R.string.Do_not_click_repeatedly_to_play),Toast.LENGTH_SHORT).show();
-                    }else{
+                    } else {
                         isPause = false;
                         start.setText("  ▎▎");
-                        Toast.makeText(FloatingButtonService.this, getString(R.string.zzbf),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(FloatingButtonService.this, getString(R.string.zzbf), Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -189,7 +167,7 @@ public class FloatingButtonService extends Service {
             start.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    Toast.makeText(FloatingButtonService.this, getString(R.string.xfcygb),Toast.LENGTH_LONG).show();
+                    Toast.makeText(FloatingButtonService.this, getString(R.string.xfcygb), Toast.LENGTH_LONG).show();
                     windowManager.removeViewImmediate(view);
                     new Thread(new Runnable() {
                         @Override
@@ -210,7 +188,7 @@ public class FloatingButtonService extends Service {
             stop.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view_) {
-                    if(playing != null) {
+                    if (playing != null) {
                         playing.interrupt();
                         timer.interrupt();
                         progressBar.setProgress(0);
@@ -218,20 +196,20 @@ public class FloatingButtonService extends Service {
                         isRun = false;
                         start.setText("▶");
                     }
-                    Toast.makeText(FloatingButtonService.this, getString(R.string.stops_running),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(FloatingButtonService.this, getString(R.string.stops_running), Toast.LENGTH_SHORT).show();
                 }
             });
             close = view.findViewById(R.id.close);
             close.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view_) {
-                    if(playing != null) {
+                    if (playing != null) {
                         playing.interrupt();
-                        if(timer != null) {
+                        if (timer != null) {
                             timer.interrupt();
                         }
                         isRun = false;
-                        Toast.makeText(FloatingButtonService.this, getString(R.string.Suspended_window_closed),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(FloatingButtonService.this, getString(R.string.Suspended_window_closed), Toast.LENGTH_SHORT).show();
                     }
                     windowManager.removeViewImmediate(view);
                 }
@@ -240,9 +218,9 @@ public class FloatingButtonService extends Service {
             list.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(isRun){
-                        Toast.makeText(FloatingButtonService.this, getString(R.string.qxtzbf),Toast.LENGTH_SHORT).show();
-                    }else{
+                    if (isRun) {
+                        Toast.makeText(FloatingButtonService.this, getString(R.string.qxtzbf), Toast.LENGTH_SHORT).show();
+                    } else {
                         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -268,20 +246,15 @@ public class FloatingButtonService extends Service {
                         TextView b = musicListView.findViewById(R.id.button);
                         ListView music_list = musicListView.findViewById(R.id.music_list);
                         final String musicNames[];
-                        final File[] musicFiles = new File(getFilesDir(), "music_list").listFiles();
-                        Arrays.sort(musicFiles);
-                        musicNames = new String[musicFiles.length];
-                        for (int i = 0; i < musicFiles.length; i++) {
-                            musicNames[i] = musicFiles[i].getName();
-                        }
+                        musicNames = floatListManager.getMusicNames();
                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(FloatingButtonService.this, android.R.layout.simple_list_item_1, musicNames);
                         music_list.setAdapter(adapter);
                         music_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             @Override
                             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                                 Toast.makeText(FloatingButtonService.this, musicNames[position], Toast.LENGTH_SHORT).show();
-                                musicFile = musicFiles[position];
-                                speed = music_speed_list.getFloat(musicNames[position],1);
+                                noteList = floatListManager.getLyreNotes(musicNames[position]);
+                                speed = 1;
                                 TextView textView = view.findViewById(R.id.midi_name);
                                 textView.setText(musicNames[position]);
                                 closeMusicList(closeMusicListHand);
@@ -299,124 +272,118 @@ public class FloatingButtonService extends Service {
         }
     }
 
-    private void resetPlaying(final Handler currentTimeHand,final Handler progressBarHand,final Handler totalTimeHand,final Handler toastHand){
+    private void resetPlaying(final Handler currentTimeHand, final Handler progressBarHand, final Handler totalTimeHand, final Handler toastHand) {
         playing = new Thread(new Runnable() {
             @Override
             public void run() {
                 //Toast.makeText(FloatingButtonService.this, "演奏开始!", Toast.LENGTH_SHORT).show();
+                keyCoordinates = getSharedPreferences("key_coordinates", Context.MODE_PRIVATE);
+                int[] input_x = {
+                        keyCoordinates.getInt("x1", 0),
+                        keyCoordinates.getInt("x2", 0),
+                        keyCoordinates.getInt("x3", 0),
+                        keyCoordinates.getInt("x4", 0),
+                        keyCoordinates.getInt("x5", 0),
+                        keyCoordinates.getInt("x6", 0),
+                        keyCoordinates.getInt("x7", 0)};
+                int[] input_y = {
+                        keyCoordinates.getInt("y3", 0),
+                        keyCoordinates.getInt("y2", 0),
+                        keyCoordinates.getInt("y1", 0)};
+                long nextTick;
 
-                try {
-                    ObjectInputStream ois = new ObjectInputStream(new FileInputStream(musicFile));
-                    ArrayList<Note> noteList = (ArrayList<Note>) ois.readObject();
-                    ois.close();
+                totalTimeHand.sendEmptyMessage((int) (noteList.get(noteList.size() - 1).getTick() * speed));
+                System.out.println(((int) (noteList.get(noteList.size() - 1).getTick() * speed)));
+                ArrayList<Note> ASetOfNotes = new ArrayList<>(10);
+                timer = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (; isRun; currentTime_ms += 100) {
+                            //判断是否被中断
+                            if (Thread.currentThread().isInterrupted()) {
+                                break;
+                            }
+                            currentTimeHand.sendEmptyMessage((int) currentTime_ms);
+                            try {
+                                Thread.sleep(100);
 
-                    keyCoordinates = getSharedPreferences("key_coordinates", Context.MODE_PRIVATE);
-                    int[] input_x = {
-                            keyCoordinates.getInt("x1", 0),
-                            keyCoordinates.getInt("x2", 0),
-                            keyCoordinates.getInt("x3", 0),
-                            keyCoordinates.getInt("x4", 0),
-                            keyCoordinates.getInt("x5", 0),
-                            keyCoordinates.getInt("x6", 0),
-                            keyCoordinates.getInt("x7", 0)};
-                    int[] input_y = {
-                            keyCoordinates.getInt("y3", 0),
-                            keyCoordinates.getInt("y2", 0),
-                            keyCoordinates.getInt("y1", 0)};
-                    long nextTick;
-
-                    totalTimeHand.sendEmptyMessage((int) (noteList.get(noteList.size() - 1).getTick() * speed));
-                    ArrayList<Note> ASetOfNotes = new ArrayList<>(10);
-                    timer = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            for (; isRun; currentTime_ms += 100) {
-                                //判断是否被中断
-                                if (Thread.currentThread().isInterrupted()) {
-                                    break;
-                                }
-                                currentTimeHand.sendEmptyMessage((int) currentTime_ms);
-                                try {
+                                while (isPause) {
                                     Thread.sleep(100);
-
-                                    while(isPause){
-                                        Thread.sleep(100);
-                                    }
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                    currentTime_ms = 0;
-                                    break;
                                 }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                                currentTime_ms = 0;
+                                break;
                             }
                         }
-                    });
-                    timer.start();
-                    for (int n = 0; n < noteList.size() && isRun; n++) {
-                        Note note = noteList.get(n);
-                        //搜索下一个音符的tick
-                        if (n + 1 < noteList.size()) {
-                            nextTick = noteList.get(n + 1).getTick();
-                        } else {
-                            nextTick = -1;
-                        }
-                        //如果下个时间等于现在的时间
-                        if (nextTick == note.getTick()) {
-                            ASetOfNotes.add(note);
-                        } else {
-                            ASetOfNotes.add(note);
-                            int[] xs = new int[ASetOfNotes.size()];
-                            int[] ys = new int[ASetOfNotes.size()];
-                            //遍历同时按下的一组音符
-                            for (int i = 0; i < ASetOfNotes.size(); i++) {
-                                int x = 0;
-                                int y = 0;
-                                if (ASetOfNotes.get(i).getNote() <= 7) {
-                                    x = input_x[ASetOfNotes.get(i).getNote() - 1];
-                                    y = input_y[0];
-                                } else if (ASetOfNotes.get(i).getNote() >= 8 && ASetOfNotes.get(i).getNote() <= 14) {
-                                    x = input_x[ASetOfNotes.get(i).getNote() - 8];
-                                    y = input_y[1];
-                                } else if (ASetOfNotes.get(i).getNote() >= 15 && ASetOfNotes.get(i).getNote() <= 21) {
-                                    x = input_x[ASetOfNotes.get(i).getNote() - 15];
-                                    y = input_y[2];
-                                }
-                                xs[i] = x;
-                                ys[i] = y;
-                            }
-                            click(xs, ys, 10);
-                            ASetOfNotes.clear();
-                            if (nextTick != -1) {
-                                progressBarHand.sendEmptyMessage((int) (100 * ((float) note.getTick() / (float) noteList.get(noteList.size() - 1).getTick())));
-                                //currentTimeHand.sendEmptyMessage((int) (note.getTick() * speed));
-                                try {
-                                    //同步当前音符的时间戳
-                                    currentTime_ms = (long) (note.getTick() * speed);
-                                    currentTimeHand.sendEmptyMessage((int) currentTime_ms);
-                                    Thread.sleep((long) ((float) (nextTick - note.getTick()) * speed));
-                                    while(isPause){
-                                        Thread.sleep(100);
-                                    }
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                    break;
-                                }
-                            } else {
-                                progressBarHand.sendEmptyMessage(100);
-                                timer.interrupt();
-                                isRun = false;
-                                toastHand.sendEmptyMessage(0);
-                            }
-                        }
-                        System.out.println(note.toString());
-
                     }
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
+                });
+                timer.start();
+                for (int n = 0; n < noteList.size() && isRun; n++) {
+                    Note note = noteList.get(n);
+                    //搜索下一个音符的tick
+                    if (n + 1 < noteList.size()) {
+                        nextTick = noteList.get(n + 1).getTick();
+                    } else {
+                        nextTick = -1;
+                    }
+                    //如果下个时间等于现在的时间
+                    if (nextTick == note.getTick()) {
+                        ASetOfNotes.add(note);
+                    } else {
+                        ASetOfNotes.add(note);
+                        int[] xs = new int[ASetOfNotes.size()];
+                        int[] ys = new int[ASetOfNotes.size()];
+                        //遍历同时按下的一组音符
+                        for (int i = 0; i < ASetOfNotes.size(); i++) {
+                            int x = 0;
+                            int y = 0;
+                            if (ASetOfNotes.get(i).getValue() <= 7) {
+                                x = input_x[ASetOfNotes.get(i).getValue() - 1];
+                                y = input_y[0];
+                            } else if (ASetOfNotes.get(i).getValue() >= 8 && ASetOfNotes.get(i).getValue() <= 14) {
+                                x = input_x[ASetOfNotes.get(i).getValue() - 8];
+                                y = input_y[1];
+                            } else if (ASetOfNotes.get(i).getValue() >= 15 && ASetOfNotes.get(i).getValue() <= 21) {
+                                x = input_x[ASetOfNotes.get(i).getValue() - 15];
+                                y = input_y[2];
+                            }
+                            xs[i] = x;
+                            ys[i] = y;
+                        }
+                        click(xs, ys, 10);
+                        ASetOfNotes.clear();
+                        if (nextTick != -1) {
+                            progressBarHand.sendEmptyMessage((int) (100 * ((float) note.getTick() / (float) noteList.get(noteList.size() - 1).getTick())));
+                            //currentTimeHand.sendEmptyMessage((int) (note.getTick() * speed));
+                            try {
+                                //同步当前音符的时间戳
+                                currentTime_ms = (long) (note.getTick() * speed);
+                                currentTimeHand.sendEmptyMessage((int) currentTime_ms);
+                                System.out.println("tick===" + note.getTick() + "  nextTick===" + nextTick);
+                                Thread.sleep((long) ((float) (nextTick - note.getTick()) * speed));
+                                while (isPause) {
+                                    Thread.sleep(100);
+                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                                break;
+                            }
+                        } else {
+                            progressBarHand.sendEmptyMessage(100);
+                            timer.interrupt();
+                            isRun = false;
+                            toastHand.sendEmptyMessage(0);
+                        }
+                    }
+                    System.out.println(note.toString());
+
                 }
             }
         });
     }
-    private void closeMusicList(final Handler handler){
+
+    private void closeMusicList(final Handler handler) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -458,12 +425,13 @@ public class FloatingButtonService extends Service {
             return false;
         }
     }
-    public void click(int[] xs,int[] ys,long time){
+
+    public void click(int[] xs, int[] ys, long time) {
         System.out.println("点击器已执行");
         GestureDescription.Builder gd = new GestureDescription.Builder();
         for (int i = 0; i < xs.length; i++) {
             Path path = new Path();
-            path.moveTo(xs[i],ys[i]);
+            path.moveTo(xs[i], ys[i]);
             gd.addStroke(new GestureDescription.StrokeDescription(path, 0, time));
         }
 
@@ -486,7 +454,8 @@ public class FloatingButtonService extends Service {
         super.onDestroy();
     }
 }
-class clickThread implements Runnable{
+
+class clickThread implements Runnable {
     @Override
     public void run() {
 

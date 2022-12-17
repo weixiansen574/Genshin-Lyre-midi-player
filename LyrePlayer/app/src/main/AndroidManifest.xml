@@ -27,7 +27,7 @@
             android:label="在线曲库"
             android:parentActivityName=".MainActivity" />
         <activity
-            android:name=".FloatList"
+            android:name=".FloatListActivity"
             android:exported="false"
             android:label="@string/float_list"
             android:parentActivityName=".MainActivity" />

@@ -34,7 +34,6 @@
     <string name="please_select_an_offset">請選擇偏移量</string>
     <string name="note_transposition">移調：</string>
     <string name="file_data_is_corrupted">檔案數據已損壞！</string>
-    <string name="file_data_is_corrupted_msg">這可能因下載檔案時意外中斷或使用擴容盤存儲檔案所導致。\n請重新選擇檔案</string>
     <string name="black_quantity">黑鍵數：</string>
     <string name="Error_coordinates_are_empty">錯誤：座標為空</string>
     <string name="Error_coordinates_are_empty_msg">請將所有座標填寫完並保存</string>
@@ -72,25 +71,17 @@
     <string name="zzbf">正在播放</string>
     <string name="yzt">已暫停</string>
     <string name="float_list">浮窗播放列表</string>
-    <string-array name="spinner3_array">
-        <item>第三排</item>
-        <item>第二排</item>
-    </string-array>
-    <string-array name="spinner4_array">
-        <item>第三排</item>
-        <item>第二排</item>
-        <item>第一排</item>
-    </string-array>
-    <string-array name="spinner5_array">
-        <item>第三排</item>
-        <item>第二排</item>
-        <item>第一排</item>
-    </string-array>
-    <string-array name="spinner6_array">
-        <item>第二排</item>
-        <item>第一排</item>
-    </string-array>
     <string name="file_help_2">顯示內部存儲空間後，點擊左上角“☰”,選擇你的設備內部存儲，即可進入內部存儲目錄</string>
     <string name="bcdfclb">保存到浮窗播放列表</string>
     <string name="dkxflb">打开悬浮列表</string>
+    <string name="zhaixianquku">在线曲库</string>
+    <string name="previous">Previous</string>
+    <string name="search">搜索</string>
+    <string name="wfljzfwq">無法連接至服務器</string>
+    <string name="ckbz">查看幫助</string>
+    <string name="wenjianguoda">文件過大！</string>
+    <string name="zgksc1mbwj">最高可上傳1MB文件</string>
+    <string name="shangchuanzhong">上傳中……</string>
+    <string name="mingchengbunengweikong">名稱不能為空！</string>
+    <string name="mcbndy100gzf">名稱不能大於100個字符！</string>
 </resources>
