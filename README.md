@@ -18,8 +18,10 @@ https://www.youtube.com/watch?v=7-_jsjF2hYc
 如果midi文件中的半音（黑键）过多，使用取左取右的笨方法演奏听起来感觉怪怪的，那么你可以尝试移调！移调就是将音符向左右平移，这样只会改变整首音乐的音调，不会改变旋律等，但可以减少半音的出现，大幅改善演奏效果。什么原理可以自己研究（坏笑）。
 
 ## 使用的开源库
-https://github.com/kshoji/javax.sound.midi-for-Android 提供的javax.sound.midi移植包（已弃用）  
-https://github.com/LeffelMania/android-midi-lib
+https://github.com/kshoji/javax.sound.midi-for-Android 提供的javax.sound.midi移植包（已弃用，因为某些midi打开报错，但是其他软件可正常读取）  
+https://github.com/LeffelMania/android-midi-lib（还是弃用了，因为读取某些midi会把noteOff一并识别为noteOn）
+v5.0.0版本，亲自移植jdk17中javax.sound.midi库。读取midi，以上问题全无  
+
 ## 更新日志
 -v1.0
 风花节末完成脚本制作，基于auto.js
@@ -59,6 +61,9 @@ https://github.com/LeffelMania/android-midi-lib
 
 -v3.4.1
 修复上个版本遗留bug：保存到浮窗播放列表一直转圈圈，但其实乐曲已保存。
+
+-v4.0.0
+发布在线曲库功能……
 
 
 ……更多版本更新信息详见 [Release](https://github.com/weixiansen574/Genshin-Lyre-midi-player/releases)
