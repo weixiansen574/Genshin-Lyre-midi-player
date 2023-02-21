@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,16 +13,55 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
+import top.weixiansen574.LyrePlayer.midi.FloatMusicBean;
 import top.weixiansen574.LyrePlayer.midi.Note;
 
-public class FloatListManager {
-    private SQLiteDatabase database;
+public class FloatListManager extends SQLiteOpenHelper {
+    public static final int VERSION = 2;
+    public static final String DBNAME = "float_music_list";
+
+    public static final int MI_TYPE_LYRE = 1;
+    public static final int MI_TYPE_OLD_LYRE = 2;
+
+    Context context;
     public FloatListManager(Context context){
-        this.database = context.openOrCreateDatabase("float_music_list",Context.MODE_PRIVATE,null);
-        database.execSQL("CREATE TABLE IF NOT EXISTS musics (name TEXT Not null Primary key,note_list BLOB Not null) ");
+        super(context,DBNAME,null,VERSION);
+        SQLiteDatabase db = context.openOrCreateDatabase(DBNAME,Context.MODE_PRIVATE,null);
+
     }
 
-    public boolean insertMusic (String name, ArrayList<Note> lyreNotes){
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        //version0: db.execSQL("CREATE TABLE IF NOT EXISTS musics (name TEXT Not null Primary key,note_list BLOB Not null) ");
+        //收拾烂摊子，之前没用SQLiteOpenHelper，会直接调用onCreate，而不是调用onUpgrade
+        if (db.getVersion() == 0){
+            onUpgrade(db,0,VERSION);
+        }
+        db.execSQL("CREATE TABLE IF NOT EXISTS musics (name TEXT Not null Primary key,type INTEGER Not null,note_list BLOB Not null) ");
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        System.out.println("oldVersion:" + oldVersion + " newVersion:" + newVersion);
+        switch (oldVersion){
+            case 0 :
+                Cursor cursor = db.rawQuery("select * from musics", null);
+                System.out.println(cursor.getCount());
+                db.execSQL("drop table musics");
+                db.execSQL("CREATE TABLE IF NOT EXISTS musics (name TEXT Not null Primary key,type INTEGER Not null,note_list BLOB Not null) ");
+                while (cursor.moveToNext()){
+                    ContentValues values = new ContentValues();
+                    values.put("name",cursor.getString(cursor.getColumnIndex("name")));
+                    values.put("type",FloatListManager.MI_TYPE_LYRE);
+                    values.put("note_list",cursor.getBlob(cursor.getColumnIndex("note_list")));
+                    db.insert("musics",null,values);
+                }
+                break;
+        }
+    }
+
+    public boolean insertMusic (String name,int type, ArrayList<Note> lyreNotes){
+        SQLiteDatabase database = getWritableDatabase();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos;
         try {
@@ -29,6 +69,7 @@ public class FloatListManager {
             oos.writeObject(lyreNotes);
             ContentValues cv = new ContentValues(3);
             cv.put("name",name);
+            cv.put("type",type);
             cv.put("note_list",baos.toByteArray());
             database.insert("musics",null,cv);
             oos.flush();
@@ -42,25 +83,26 @@ public class FloatListManager {
         }
     }
 
-    public String[] getMusicNames(){
+    public ArrayList<String> getMusicNames(){
+        SQLiteDatabase database = getReadableDatabase();
         Cursor cursor = database.rawQuery("select * from musics",null);
-        String[] musicNames = new String[cursor.getCount()];
-        int j = 0;
+        ArrayList<String> musicNames = new ArrayList<>(cursor.getCount());
         while(cursor.moveToNext()){
-            musicNames[j] = cursor.getString(cursor.getColumnIndex("name"));
-            j++;
+            musicNames.add(cursor.getString(cursor.getColumnIndex("name")));
         }
         return musicNames;
     }
 
-    public ArrayList<Note> getLyreNotes(String musicName){
-        Cursor cursor = database.rawQuery("select note_list from musics where name=?",new String[]{musicName});
+    public FloatMusicBean getFloatMusicBean(String musicName){
+        SQLiteDatabase database = getReadableDatabase();
+        Cursor cursor = database.rawQuery("select type,note_list from musics where name=?",new String[]{musicName});
         if (cursor.moveToNext()){
             byte[] data = cursor.getBlob(cursor.getColumnIndex("note_list"));
+            int type = cursor.getInt(cursor.getColumnIndex("type"));
             try {
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
                 ArrayList<Note> lyreNotes = (ArrayList<Note>) ois.readObject();
-                return lyreNotes;
+                return new FloatMusicBean(musicName,type,lyreNotes);
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
                 return null;
@@ -71,6 +113,7 @@ public class FloatListManager {
     }
 
     public int deleteMusic (String musicName){
+        SQLiteDatabase database = getWritableDatabase();
         return database.delete("musics","name=?",new String[]{musicName});
     }
 }

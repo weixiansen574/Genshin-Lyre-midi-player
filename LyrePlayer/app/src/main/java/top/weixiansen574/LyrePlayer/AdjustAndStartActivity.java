@@ -30,15 +30,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.leff.midi.NotIsMidiFileException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 
-import top.weixiansen574.LyrePlayer.enums.BlackKeySetting;
+import javax.sound.midi.InvalidMidiDataException;
+
+import top.weixiansen574.LyrePlayer.enums.InvalidKeySetting;
+import top.weixiansen574.LyrePlayer.enums.MusicInstrumentType;
 import top.weixiansen574.LyrePlayer.midi.MidiProcessor;
 import top.weixiansen574.LyrePlayer.midi.Note;
 import top.weixiansen574.LyrePlayer.util.AccessibilityUtil;
@@ -53,6 +54,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
     Spinner spinner6;
     Spinner spinner7;
     RadioGroup blackKeySettings;
+    RadioGroup rg_musicInstrumentType;
     float speed = -1;
     int transposition = 11;
     int currentTransposition = -1;
@@ -171,6 +173,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
         this.setSpinner(spinner6, R.array.spinner6_array, 1);
         this.setSpinner(spinner7, R.array.spinner7_array, 0);
         blackKeySettings = (RadioGroup) findViewById(R.id.black_key_settings);
+        rg_musicInstrumentType = findViewById(R.id.music_instrument_type);
         final EditText x1 = findViewById(R.id.x1);
         final EditText x2 = findViewById(R.id.x2);
         final EditText x3 = findViewById(R.id.x3);
@@ -198,12 +201,12 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
             try {
                 InputStream inputStream = getResources().getAssets().open("ResolutionCoordinateMapping.json");
                 byte[] buffer = new byte[inputStream.available()];
-                inputStream.read(buffer,0,inputStream.available());
+                inputStream.read(buffer, 0, inputStream.available());
                 String JSONString = new String(buffer);
                 JSONObject coordinateMappingJSON = JSON.parseObject(JSONString);
                 String resolution = getResolution();
                 if (coordinateMappingJSON.containsKey(resolution)) {
-                    Toast.makeText(this,"已根据您的屏幕分辨率：" + resolution + "自动填写坐标！（需自行保存）",Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "已根据您的屏幕分辨率：" + resolution + "自动填写坐标！（需自行保存）", Toast.LENGTH_LONG).show();
                     JSONObject coordinatesJSON = coordinateMappingJSON.getJSONObject(resolution);
                     x1.setText(coordinatesJSON.getString("x1"));
                     x2.setText(coordinatesJSON.getString("x2"));
@@ -220,7 +223,6 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                 e.printStackTrace();
             }
         }
-
 
 
         Button startSettings = findViewById(R.id.launch_setting);
@@ -312,10 +314,15 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                 Thread analyzeBlackKeyThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        ArrayList<Note> noteArrayList = MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this,getContentResolver(),midiUri);
-                        if (noteArrayList != null){
+                        ArrayList<Note> noteArrayList = MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this, getContentResolver(), midiUri);
+                        if (noteArrayList != null) {
                             for (int i = 0; i < tanspositionString.length; i++) {
-                                int blackKeyQuantity = MidiProcessor.analyzeBlackKeyQuantity(noteArrayList,(11 - i));
+                                int blackKeyQuantity = 0;
+                                if (getMusicInstrumentType() == MusicInstrumentType.lyre) {
+                                    blackKeyQuantity = MidiProcessor.analyzeBlackKeyQuantity(noteArrayList, (11 - i));
+                                } else if (getMusicInstrumentType() == MusicInstrumentType.oldLyre) {
+                                    blackKeyQuantity = MidiProcessor.analyzeInvalidKeyQuantityForOldLyre(noteArrayList, (11 - i), getSpinnerSettings());
+                                }
                                 tanspositionString[i] += ("  " + getString(R.string.black_quantity) + (blackKeyQuantity / 2));
                             }
                             hand.sendEmptyMessage(1);
@@ -326,6 +333,21 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                 analyzeBlackKeyThread.start();
             }
 
+        });
+        analyze.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                new Thread(() -> {
+                    try {
+                        MidiProcessor.toNoteList(getContentResolver().openInputStream(midiUri));
+                    } catch (InvalidMidiDataException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+                return false;
+            }
         });
         //保存到列表
         Button save_to_list = findViewById(R.id.save_to_list);
@@ -346,8 +368,13 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                                 Thread processMidiThread = new Thread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ArrayList<Note> noteList = MidiProcessor.toLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this,getContentResolver(),midiUri), transposition,getSpinnerSettings(),getBlackKeySettings());
-                                        if (floatListManager.insertMusic(text.getText().toString(),noteList)) {
+                                        ArrayList<Note> noteList = null;
+                                        if (getMusicInstrumentType() == MusicInstrumentType.lyre) {
+                                            noteList = MidiProcessor.toLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this, getContentResolver(), midiUri), transposition, getSpinnerSettings(), getInvalidKeySettings());
+                                        } else if (getMusicInstrumentType() == MusicInstrumentType.oldLyre){
+                                            noteList = MidiProcessor.toOldLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this, getContentResolver(), midiUri), transposition, getSpinnerSettings(), getInvalidKeySettings());
+                                        }
+                                        if (floatListManager.insertMusic(text.getText().toString(),getMusicInstrumentType() == MusicInstrumentType.lyre ? FloatListManager.MI_TYPE_LYRE : FloatListManager.MI_TYPE_OLD_LYRE, noteList)) {
                                             runOnUiThread(new Runnable() {
                                                 @Override
                                                 public void run() {
@@ -378,24 +405,6 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                         }).show();
             }
         });
-        //调试代码，记得删
-        save_to_list.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                try {
-                    Iterator iterator = MidiProcessor.toLyreNoteList(MidiProcessor.toNoteList(getContentResolver().openInputStream(midiUri)),0,new int[]{1,1,1,2,3,3,3}, BlackKeySetting.left).iterator();
-                    while (iterator.hasNext()){
-                        System.out.println(iterator.next());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (NotIsMidiFileException e) {
-                    e.printStackTrace();
-                }
-                return false;
-            }
-        });
-
     }
 
     public void setSpinner(Spinner spinner, int textArrayResId, int selection) {
@@ -436,17 +445,22 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
                     Thread processMidiThread = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                                final ArrayList<Note> sequenceOfNotes = MidiProcessor.toLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this,getContentResolver(),midiUri), transposition,getSpinnerSettings(),getBlackKeySettings());
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Intent intent = new Intent(AdjustAndStartActivity.this, FloatingButtonService.class);
-                                        intent.putExtra("name",midiName);
-                                        intent.putExtra("noteListKey",NoteListStorage.putNoteList(sequenceOfNotes));
-                                        startService(intent);
-                                    }
-                                });
-
+                            ArrayList<Note> noteList = null;
+                            if (getMusicInstrumentType() == MusicInstrumentType.lyre) {
+                                noteList = MidiProcessor.toLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this, getContentResolver(), midiUri), transposition, getSpinnerSettings(), getInvalidKeySettings());
+                            } else if (getMusicInstrumentType() == MusicInstrumentType.oldLyre){
+                                noteList = MidiProcessor.toOldLyreNoteList(MidiProcessor.processorToNoteListAndHandleExceptions(AdjustAndStartActivity.this, getContentResolver(), midiUri), transposition, getSpinnerSettings(), getInvalidKeySettings());
+                            }
+                            long noteListId = NoteListStorage.putNoteList(noteList);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Intent intent = new Intent(AdjustAndStartActivity.this, FloatingButtonService.class);
+                                    intent.putExtra("name", midiName);
+                                    intent.putExtra("noteListKey", noteListId);
+                                    startService(intent);
+                                }
+                            });
                         }
                     });
                     processMidiThread.setName("processMidi");
@@ -473,70 +487,81 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
         return "";
     }
 
-    public int[] getSpinnerSettings(){
+    public int[] getSpinnerSettings() {
         int[] settings = new int[7];//{1,1,1,2,3,3,3};
-        if (spinner1.getSelectedItemPosition() == 0){
+        if (spinner1.getSelectedItemPosition() == 0) {
             settings[0] = 1;
-        } else if (spinner1.getSelectedItemPosition() == 1){
+        } else if (spinner1.getSelectedItemPosition() == 1) {
             settings[0] = -1;
         }
-        if (spinner2.getSelectedItemPosition() == 0){
+        if (spinner2.getSelectedItemPosition() == 0) {
             settings[1] = 1;
-        } else if (spinner2.getSelectedItemPosition() == 1){
+        } else if (spinner2.getSelectedItemPosition() == 1) {
             settings[1] = -1;
         }
-        if (spinner3.getSelectedItemPosition() == 0){
+        if (spinner3.getSelectedItemPosition() == 0) {
             settings[2] = 1;
-        } else if (spinner3.getSelectedItemPosition() == 1){
+        } else if (spinner3.getSelectedItemPosition() == 1) {
             settings[2] = 2;
         }
 
         if (spinner4.getSelectedItemPosition() == 0) {
             settings[3] = 1;
-        } else if (spinner4.getSelectedItemPosition() == 1){
+        } else if (spinner4.getSelectedItemPosition() == 1) {
             settings[3] = 2;
-        } else if (spinner4.getSelectedItemPosition() == 2){
+        } else if (spinner4.getSelectedItemPosition() == 2) {
             settings[3] = 3;
         }
 
         if (spinner5.getSelectedItemPosition() == 0) {
             settings[4] = 1;
-        } else if (spinner5.getSelectedItemPosition() == 1){
+        } else if (spinner5.getSelectedItemPosition() == 1) {
             settings[4] = 2;
-        } else if (spinner5.getSelectedItemPosition() == 2){
+        } else if (spinner5.getSelectedItemPosition() == 2) {
             settings[4] = 3;
         }
 
         if (spinner6.getSelectedItemPosition() == 0) {
             settings[5] = 2;
-        } else if (spinner6.getSelectedItemPosition() == 1){
+        } else if (spinner6.getSelectedItemPosition() == 1) {
             settings[5] = 3;
-        } else if (spinner6.getSelectedItemPosition() == 2){
+        } else if (spinner6.getSelectedItemPosition() == 2) {
             settings[5] = -1;
         }
-        if (spinner7.getSelectedItemPosition() == 0){
+        if (spinner7.getSelectedItemPosition() == 0) {
             settings[6] = 1;
-        } else if (spinner7.getSelectedItemPosition() == 1){
+        } else if (spinner7.getSelectedItemPosition() == 1) {
             settings[6] = -1;
         }
         return settings;
     }
 
-    private BlackKeySetting getBlackKeySettings() {
+    private InvalidKeySetting getInvalidKeySettings() {
         switch (blackKeySettings.getCheckedRadioButtonId()) {
             case R.id.cb1:
-                return BlackKeySetting.leftAndRight;
+                return InvalidKeySetting.leftAndRight;
             case R.id.cb2:
-                return BlackKeySetting.left;
+                return InvalidKeySetting.left;
             case R.id.cb3:
-                return BlackKeySetting.right;
+                return InvalidKeySetting.right;
             case R.id.cb4:
-                return BlackKeySetting.no;
+                return InvalidKeySetting.no;
         }
-        return BlackKeySetting.no;
+        return InvalidKeySetting.no;
     }
 
-    private void dialog(final String title, final String message){
+    private MusicInstrumentType getMusicInstrumentType() {
+        switch (rg_musicInstrumentType.getCheckedRadioButtonId()) {
+            case R.id.cb_lyre:
+                return MusicInstrumentType.lyre;
+            case R.id.cb_old_lrye:
+                return MusicInstrumentType.oldLyre;
+        }
+        return MusicInstrumentType.lyre;
+    }
+
+
+    private void dialog(final String title, final String message) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -549,7 +574,7 @@ public class AdjustAndStartActivity extends AppCompatActivity implements View.On
         });
     }
 
-    public String getResolution(){
+    public String getResolution() {
         WindowManager windowManager = getWindow().getWindowManager();
         Point point = new Point();
         windowManager.getDefaultDisplay().getRealSize(point);

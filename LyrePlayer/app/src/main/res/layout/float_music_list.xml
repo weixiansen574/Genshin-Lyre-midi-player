@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     app:cardCornerRadius="2dp">
 
     <LinearLayout
@@ -38,7 +37,7 @@
                     android:textSize="20sp" />
             </LinearLayout>
 
-                <ListView
+                <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/music_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -64,7 +63,7 @@
                     android:text="取消选择"
                     android:foreground="?android:attr/selectableItemBackground"
                     android:textColor="@color/colorBlue"
-                    android:textSize="16sp" />
+                    android:textSize="14sp" />
             </LinearLayout>
 
 

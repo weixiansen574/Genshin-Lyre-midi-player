@@ -30,7 +30,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.leff.midi.NotIsMidiFileException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -41,6 +40,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.sound.midi.InvalidMidiDataException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -263,7 +264,7 @@ public class SelecFromServerActivity extends AppCompatActivity {
             e.printStackTrace();
         } catch (IOException e) {
             Toast.makeText(SelecFromServerActivity.this, getString(R.string.dqwjsydyc) + e.getMessage() + getString(R.string.qxzzcnbfdwj), Toast.LENGTH_LONG).show();
-        } catch (NotIsMidiFileException e) {
+        } catch (InvalidMidiDataException e) {
             e.printStackTrace();
         }
     }

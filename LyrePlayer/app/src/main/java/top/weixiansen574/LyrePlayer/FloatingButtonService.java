@@ -18,20 +18,20 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import top.weixiansen574.LyrePlayer.adapter.FLoatMusicListAdapter;
 import top.weixiansen574.LyrePlayer.midi.Note;
 import top.weixiansen574.LyrePlayer.util.NoteListStorage;
 
@@ -70,6 +70,7 @@ public class FloatingButtonService extends Service {
         name = intent.getStringExtra("name");
         midiName.setText(name);
         noteList = NoteListStorage.getNoteList(intent.getLongExtra("noteListKey",0));
+        System.out.println("noteListSize："+noteList.size());
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -244,19 +245,17 @@ public class FloatingButtonService extends Service {
                         };
 
                         TextView b = musicListView.findViewById(R.id.button);
-                        ListView music_list = musicListView.findViewById(R.id.music_list);
-                        final String musicNames[];
-                        musicNames = floatListManager.getMusicNames();
-                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(FloatingButtonService.this, android.R.layout.simple_list_item_1, musicNames);
-                        music_list.setAdapter(adapter);
-                        music_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        RecyclerView music_list = musicListView.findViewById(R.id.music_list);
+                        ArrayList<String> musicNames = floatListManager.getMusicNames();
+                        FLoatMusicListAdapter adapter = new FLoatMusicListAdapter(FloatingButtonService.this,musicNames);
+                        adapter.setOnItemClickListener(new FLoatMusicListAdapter.OnItemClickListener() {
                             @Override
-                            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                                Toast.makeText(FloatingButtonService.this, musicNames[position], Toast.LENGTH_SHORT).show();
-                                noteList = floatListManager.getLyreNotes(musicNames[position]);
+                            public void onItemClick(View v, int position) {
+                                Toast.makeText(FloatingButtonService.this, musicNames.get(position), Toast.LENGTH_SHORT).show();
+                                noteList = floatListManager.getFloatMusicBean(musicNames.get(position)).noteList;
                                 speed = 1;
                                 TextView textView = view.findViewById(R.id.midi_name);
-                                textView.setText(musicNames[position]);
+                                textView.setText(musicNames.get(position));
                                 closeMusicList(closeMusicListHand);
                             }
                         });
@@ -266,6 +265,10 @@ public class FloatingButtonService extends Service {
                                 closeMusicList(closeMusicListHand);
                             }
                         });
+                        music_list.setAdapter(adapter);
+                        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(FloatingButtonService.this);
+                        linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
+                        music_list.setLayoutManager(linearLayoutManager);
                     }
                 }
             });

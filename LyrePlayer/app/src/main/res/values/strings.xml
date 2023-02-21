@@ -6,7 +6,7 @@
     <string name="gang_qin_dui_ying_jian_wei_fan_wei">选择钢琴按键对应原神键位的范围</string>
     <string name="row3">第三排</string>
     <string name="row1">第一排</string>
-    <string name="black_key_processing_method">原神没有半音（黑键），请选择处理方式</string>
+    <string name="black_key_processing_method">无效按键（例如普通琴不能弹到的黑键）处理方法</string>
     <string name="cb1_text">相邻两键和弦</string>
     <string name="cb2_text">取左边的按键</string>
     <string name="cb3_text">取右边的按键</string>
