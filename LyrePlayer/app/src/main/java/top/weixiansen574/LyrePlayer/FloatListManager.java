@@ -33,11 +33,11 @@ public class FloatListManager extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         //version0: db.execSQL("CREATE TABLE IF NOT EXISTS musics (name TEXT Not null Primary key,note_list BLOB Not null) ");
+        db.execSQL("CREATE TABLE IF NOT EXISTS musics (name TEXT Not null Primary key,type INTEGER Not null,note_list BLOB Not null) ");
         //收拾烂摊子，之前没用SQLiteOpenHelper，会直接调用onCreate，而不是调用onUpgrade
         if (db.getVersion() == 0){
             onUpgrade(db,0,VERSION);
         }
-        db.execSQL("CREATE TABLE IF NOT EXISTS musics (name TEXT Not null Primary key,type INTEGER Not null,note_list BLOB Not null) ");
     }
 
     @Override
